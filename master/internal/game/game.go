@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"aluance.io/wordle/master/internal/store"
 	"github.com/rs/xid"
 )
 
@@ -47,22 +48,38 @@ func Create(secretWord string) (Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	game := new(wordleGame)
+	// game := new(wordleGame)
+	game := &wordleGame{}
 	game.Id = xid.New().String()
 	game.SecretWord = sw
 	game.Attempts = []*WordleAttempt{}
 	game.Status = InPlay
 
+	s, err := store.WordleStore()
+	if err != nil {
+		return game, err
+	}
+	if err := s.Save(game.Id, game); err != nil {
+		return game, err
+	}
+
 	return game, nil
 }
 
 func Retrieve(id string) (Game, error) {
-	if len(id) < 1 {
-		return nil, fmt.Errorf("game id not found")
+	s, err := store.WordleStore()
+	if err != nil {
+		return nil, err
+	}
+	content, err := s.Load(id)
+	if err != nil {
+		return nil, err
 	}
 
-	// TODO replace this with code to load an existing game
-	game, _ := Create("nnnnn")
+	game, ok := content.(Game)
+	if !ok {
+		return nil, fmt.Errorf("content is not a game")
+	}
 
 	return game, nil
 }
@@ -210,3 +227,5 @@ func (g wordleGame) turnReport(a *WordleAttempt) string {
 
 	return string(b)
 }
+
+// func (g wordleGame) copy() {}

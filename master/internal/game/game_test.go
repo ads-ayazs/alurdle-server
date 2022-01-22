@@ -166,3 +166,45 @@ func TestAddAttempt(t *testing.T) {
 		assert.Equal(res.TryResult, test.result.TryResult)
 	}
 }
+
+//func Retrieve(id string) (*Game, error)
+func TestRetrieve(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	tests := []struct {
+		createWord string
+		id         string
+		err        error
+	}{
+		{createWord: "Adieu", id: "", err: nil},
+	}
+
+	// Create test games
+	for i, test := range tests {
+		game, err := Create(test.createWord)
+		require.NoError(err, "Create() returned error when creating Game")
+		require.NotNil(game, "unable to create a Game object")
+
+		v, ok := game.(*wordleGame)
+		require.True(ok)
+		tests[i].id = v.Id
+	}
+
+	// Test retrieving games
+	for _, test := range tests {
+		game, err := Retrieve(test.id)
+		assert.IsType(test.err, err, "returned unexpected error")
+		if err != nil {
+			assert.EqualError(err, test.err.Error())
+			continue // This test returned a valid error so move to the next test
+		}
+
+		assert.NoError(err)
+		assert.NotNil(game)
+
+		v, ok := game.(*wordleGame)
+		require.True(ok)
+		assert.Equal(test.id, v.Id)
+	}
+}
