@@ -56,6 +56,17 @@ func Create(secretWord string) (Game, error) {
 	return game, nil
 }
 
+func Retrieve(id string) (Game, error) {
+	if len(id) < 1 {
+		return nil, fmt.Errorf("game id not found")
+	}
+
+	// TODO replace this with code to load an existing game
+	game, _ := Create("nnnnn")
+
+	return game, nil
+}
+
 func (g wordleGame) Describe() (string, error) {
 	gameStr := fmt.Sprint(g)
 	return gameStr, nil
