@@ -132,7 +132,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	return g.turnReport(attempt), nil
 }
 
-func (g wordleGame) Resign() (string, error) {
+func (g *wordleGame) Resign() (string, error) {
 	g.Status = Resigned
 
 	return g.statusReport(), nil
