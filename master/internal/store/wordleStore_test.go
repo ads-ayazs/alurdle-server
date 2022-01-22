@@ -19,6 +19,7 @@ func TestWordleStore(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		resetWordleStore()
 		s, err := WordleStore()
 		assert.IsType(test.err, err, "unexpected error type")
 		if err != nil {
@@ -51,6 +52,7 @@ func TestSave(t *testing.T) {
 		{id: "", content: "cause an error", err: errors.New("invalid id")},
 	}
 
+	resetWordleStore() // Ensure that we get a new instance
 	store, err := WordleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
@@ -88,6 +90,7 @@ func TestLoad(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
+	resetWordleStore()
 	store, err := WordleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
@@ -128,6 +131,7 @@ func TestExists(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
+	resetWordleStore()
 	store, err := WordleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
@@ -178,6 +182,7 @@ func TestDelete(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
+	resetWordleStore()
 	store, err := WordleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
@@ -241,6 +246,7 @@ func TestPurgeAll(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
+	resetWordleStore()
 	store, err := WordleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
@@ -273,3 +279,18 @@ func TestPurgeAll(t *testing.T) {
 	assert.NoError(err)
 
 }
+
+// func createCleanStore() (Store, error) {
+// 	store, err := WordleStore()
+// 	if err != nil {
+// 		return store, err
+// 	}
+
+// 	if v, ok := store.(wordleStore); ok {
+// 		for k, _ := range v.games {
+// 			delete(v.games, k)
+// 		}
+// 	}
+
+// 	return store, err
+// }

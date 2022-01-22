@@ -2,7 +2,8 @@ package store
 
 import (
 	"fmt"
-	"sync"
+
+	"github.com/matryer/resync"
 )
 
 func WordleStore() (Store, error) {
@@ -70,7 +71,7 @@ type wordleStore struct {
 }
 
 var singleStore *wordleStore
-var once sync.Once
+var once resync.Once // using resync.Once to facilitate testing
 
 func getWordleStore() *wordleStore {
 	if singleStore == nil {
@@ -82,6 +83,12 @@ func getWordleStore() *wordleStore {
 	}
 
 	return singleStore
+}
+
+// Created to facilitate testing
+func resetWordleStore() {
+	singleStore = nil
+	once.Reset()
 }
 
 func validateId(id string) error {
