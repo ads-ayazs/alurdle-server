@@ -16,6 +16,7 @@ func setupRouter() *gin.Engine {
 
 	router.GET("/game", getGame)
 	router.GET("/play", getPlay)
+	router.GET("/resign", getResign)
 
 	router.Run(":8080")
 
@@ -48,6 +49,21 @@ func getPlay(c *gin.Context) {
 	out, err := g.Play(guessWord)
 	if err != nil {
 		c.String(http.StatusFailedDependency, "game.Play() failed")
+	}
+
+	c.String(http.StatusOK, out)
+}
+
+func getResign(c *gin.Context) {
+	gameId := c.Query("id")
+
+	g, err := game.Retrieve(gameId)
+	if err != nil {
+		c.String(http.StatusFailedDependency, "game.Retrieve() failed")
+	}
+	out, err := g.Resign()
+	if err != nil {
+		c.String(http.StatusFailedDependency, "game.Resign() failed")
 	}
 
 	c.String(http.StatusOK, out)
