@@ -128,12 +128,32 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 		g.Status = Lost
 	}
 
+	// Save to game store
+	gs, err := store.WordleStore()
+	if err != nil {
+		return g.turnReport(attempt), err
+	}
+	err = gs.Save(g.Id, g)
+	if err != nil {
+		return g.turnReport(attempt), err
+	}
+
 	// Return the attempt as JSON
 	return g.turnReport(attempt), nil
 }
 
 func (g *wordleGame) Resign() (string, error) {
 	g.Status = Resigned
+
+	// Save to game store
+	gs, err := store.WordleStore()
+	if err != nil {
+		return g.statusReport(), err
+	}
+	err = gs.Save(g.Id, g)
+	if err != nil {
+		return g.statusReport(), err
+	}
 
 	return g.statusReport(), nil
 }
