@@ -25,10 +25,15 @@ func setupRouter() *gin.Engine {
 
 func getGame(c *gin.Context) {
 	gameId := c.Query("id")
+	startWord := c.Query("word")
+
+	if len(startWord) < 1 {
+		startWord = "blank"
+	}
 
 	var g game.Game
 	if len(gameId) < 1 {
-		g, _ = game.Create("blank")
+		g, _ = game.Create(startWord)
 	} else {
 		g, _ = game.Retrieve(gameId)
 	}
@@ -42,13 +47,19 @@ func getPlay(c *gin.Context) {
 	gameId := c.Query("id")
 	guessWord := c.Query("guess")
 
+	if len(gameId) < 1 {
+		c.String(http.StatusBadRequest, "invalid ID")
+		return
+	}
 	g, err := game.Retrieve(gameId)
 	if err != nil {
-		c.String(http.StatusFailedDependency, "game.Retrieve() failed")
+		c.String(http.StatusBadRequest, "incorrect ID - game.Retrieve() failed")
+		return
 	}
 	out, err := g.Play(guessWord)
 	if err != nil {
-		c.String(http.StatusFailedDependency, "game.Play() failed")
+		c.String(http.StatusBadRequest, "guess word error - game.Play() failed")
+		return
 	}
 
 	c.String(http.StatusOK, out)
@@ -57,13 +68,19 @@ func getPlay(c *gin.Context) {
 func getResign(c *gin.Context) {
 	gameId := c.Query("id")
 
+	if len(gameId) < 1 {
+		c.String(http.StatusBadRequest, "{ \"error\": \"invalid id\" }")
+		return
+	}
 	g, err := game.Retrieve(gameId)
 	if err != nil {
-		c.String(http.StatusFailedDependency, "game.Retrieve() failed")
+		c.String(http.StatusBadRequest, "{ \"error\": \"game.Retrieve() failed\" }")
+		return
 	}
 	out, err := g.Resign()
 	if err != nil {
-		c.String(http.StatusFailedDependency, "game.Resign() failed")
+		c.String(http.StatusInternalServerError, "{ \"error\": \"game.Resign() failed\" }")
+		return
 	}
 
 	c.String(http.StatusOK, out)
