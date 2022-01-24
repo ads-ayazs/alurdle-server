@@ -1,6 +1,7 @@
 package dictionary
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ func TestGenerateWord(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
+	wordleDict.reset()
 	err := Initialize(TEST_DICTIONARY_FILENAME)
 	require.NoError(err)
 
@@ -28,19 +30,20 @@ func TestIsWordValid(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
+	wordleDict.reset()
 	err := Initialize(TEST_DICTIONARY_FILENAME)
 	require.NoError(err)
 
 	// Test valid words
-	testWords := []string{"anime", "bills", "drawn", "lives", "nodes"}
+	testWords := []string{"blank", "blANk", "anime", "drawn", "lives", "nodes"}
 	for _, tw := range testWords {
-		assert.True(IsWordValid(tw))
+		assert.True(IsWordValid(tw), fmt.Sprintf("\"%s\" should be valid", tw))
 	}
 
 	// Test invalid words
-	testWords = []string{"xxxxx", "whizz", "bangs"}
+	testWords = []string{"xxxxx", "whizz", "bangs", "blagu"}
 	for _, tw := range testWords {
-		assert.False(IsWordValid(tw))
+		assert.False(IsWordValid(tw), fmt.Sprintf("\"%s\" should NOT be valid", tw))
 	}
 }
 
@@ -49,14 +52,23 @@ func TestInitialize(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	// Test standard initialization
+	wordleDict.reset()
+	assert.False(wordleDict.initalized)
 	err := Initialize("")
 	assert.NoError(err)
 
+	// Make sure that the dictionary is not empty
+	assert.True(wordleDict.initalized)
+	assert.NotZero(len(wordleDict.words))
+
 	// Use controled initialization
+	wordleDict.reset()
+	assert.False(wordleDict.initalized)
 	err = Initialize(TEST_DICTIONARY_FILENAME)
 	assert.NoError(err)
 
 	// Make sure that the dictionary is not empty
+	assert.True(wordleDict.initalized)
 	assert.NotZero(len(wordleDict.words))
 	assert.Equal(TEST_DICTIONARY_LENGTH, len(wordleDict.words))
 	assert.Equal(TEST_DICTIONARY_LENGTH, len(wordleDict.wordMap))
