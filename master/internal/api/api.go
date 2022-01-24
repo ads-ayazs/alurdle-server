@@ -13,6 +13,8 @@ func Initialize() {
 
 func setupRouter() *gin.Engine {
 	router := gin.Default()
+	// TODO: Enable security | https://github.com/gin-contrib/secure
+	// router.Use(secure.New(secure.DefaultConfig()))
 
 	router.GET("/game", getGame)
 	router.GET("/play", getPlay)
