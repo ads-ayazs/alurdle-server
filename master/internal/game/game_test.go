@@ -168,36 +168,6 @@ func TestResign(t *testing.T) {
 	}
 }
 
-func TestState(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
-
-	tests := []struct {
-		createWord string
-		result     []string
-		err        error
-	}{
-		{createWord: "bless", result: []string{"attempts", "attemptsUsed", "gameStatus", "id"}, err: nil},
-	}
-
-	for _, test := range tests {
-		game, err := Create(test.createWord)
-		require.NoError(err, "Create() returned error when creating Game")
-		require.NotNil(game, "unable to create a Game object")
-
-		s, err := game.State()
-		assert.ErrorIs(test.err, err, "returned unexpected error")
-		if err != nil {
-			assert.EqualError(err, test.err.Error())
-			continue // This test returned a valid error so move to the next test
-		}
-
-		for _, el := range test.result {
-			assert.Contains(s, el, el)
-		}
-	}
-}
-
 func TestAddAttempt(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)

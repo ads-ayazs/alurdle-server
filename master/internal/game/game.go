@@ -18,7 +18,6 @@ package game
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"aluance.io/wordle/internal/config"
@@ -42,7 +41,7 @@ type Game interface {
 	Describe() (string, error)
 	Play(tryWord string) (string, error)
 	Resign() (string, error)
-	State() (string, error)
+	// State() (string, error)
 }
 
 // Factory used to create a game
@@ -87,7 +86,7 @@ func Retrieve(id string) (Game, error) {
 
 	game, ok := content.(Game)
 	if !ok {
-		return nil, fmt.Errorf("content is not a game")
+		return nil, ErrSerialization
 	}
 
 	return game, nil
@@ -99,11 +98,12 @@ func (g wordleGame) Describe() (string, error) {
 
 func (g *wordleGame) Play(tryWord string) (string, error) {
 	if g.Status != InPlay {
-		return g.statusReport(), fmt.Errorf("game is finished")
+		return g.statusReport(), ErrGameOver
 	}
-	if len(g.Attempts) >= 6 {
+	if len(g.Attempts) >= config.CONFIG_GAME_MAXATTEMPTS ||
+		g.ValidAttempts >= config.CONFIG_GAME_MAXVALIDATTEMPTS {
 		g.Status = Lost
-		return g.statusReport(), fmt.Errorf("out of turns")
+		return g.statusReport(), ErrOutOfTurns
 	}
 
 	attempt := g.addAttempt()
@@ -111,39 +111,39 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	attempt.TryWord = tw
 	if err != nil {
 		attempt.IsValidWord = false
-		// return g.turnReport(attempt), err
-		return g.statusReport(), err
+		if err == ErrWordLength {
+			return g.statusReport(), err
+		}
+		return g.statusReport(), nil
 	}
 	attempt.IsValidWord = true
+	g.ValidAttempts++
 
 	// Score the tryWord letters against the secret
 	score := attempt.TryResult
 	if err := g.scoreWord(tw, &score); err != nil {
-		// return g.turnReport(attempt), err
 		return g.statusReport(), err
 	}
 
 	// Check for end of game conditions
 	if attempt.isWinner() {
 		g.Status = Won
-	} else if len(g.Attempts) >= 6 {
+	} else if len(g.Attempts) >= config.CONFIG_GAME_MAXATTEMPTS ||
+		g.ValidAttempts >= config.CONFIG_GAME_MAXVALIDATTEMPTS {
 		g.Status = Lost
 	}
 
 	// Save to game store
 	gs, err := store.WordleStore()
 	if err != nil {
-		// return g.turnReport(attempt), err
 		return g.statusReport(), err
 	}
 	err = gs.Save(g.Id, g)
 	if err != nil {
-		// return g.turnReport(attempt), err
 		return g.statusReport(), err
 	}
 
 	// Return the attempt as JSON
-	// return g.turnReport(attempt), nil
 	return g.statusReport(), nil
 }
 
@@ -160,10 +160,6 @@ func (g *wordleGame) Resign() (string, error) {
 		return g.statusReport(), err
 	}
 
-	return g.statusReport(), nil
-}
-
-func (g wordleGame) State() (string, error) {
 	return g.statusReport(), nil
 }
 
@@ -184,10 +180,11 @@ func (t GameStatusType) String() string {
 }
 
 type wordleGame struct {
-	Id         string           `json:"id"`
-	Status     GameStatusType   `json:"gameStatus"`
-	SecretWord string           `json:"secretWord"`
-	Attempts   []*WordleAttempt `json:"attempts"`
+	Id            string           `json:"id"`
+	Status        GameStatusType   `json:"gameStatus"`
+	SecretWord    string           `json:"secretWord"`
+	Attempts      []*WordleAttempt `json:"attempts"`
+	ValidAttempts int              `json:"validAttempts"`
 }
 
 // func (g wordleGame) String() string {
@@ -239,39 +236,9 @@ func (g wordleGame) statusReport() string {
 	return string(b)
 }
 
-func (g wordleGame) turnReport(a *WordleAttempt) string {
-	// Convert game status to map
-	sr := g.statusReport()
-	report := map[string]interface{}{}
-
-	if err := json.Unmarshal([]byte(sr), &report); err != nil {
-		return "{}"
-	}
-
-	// Convert turn status to map
-	ar := fmt.Sprint(a)
-	arMap := map[string]interface{}{}
-
-	if err := json.Unmarshal([]byte(ar), &arMap); err != nil {
-		return "{}"
-	}
-
-	// Comnine the maps and return as JSON
-	for k, v := range arMap {
-		report[k] = v
-	}
-
-	b, err := json.Marshal(report)
-	if err != nil {
-		return "{}"
-	}
-
-	return string(b)
-}
-
 func (g wordleGame) scoreWord(tryWord string, result *[]LetterHint) error {
 	if result == nil {
-		return fmt.Errorf("nil result provided")
+		return ErrNilResult
 	}
 	score := *result
 
