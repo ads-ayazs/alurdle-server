@@ -1,8 +1,6 @@
 package store
 
 import (
-	"fmt"
-
 	"github.com/matryer/resync"
 )
 
@@ -50,7 +48,7 @@ func (s wordleStore) Delete(id string) error {
 	if _, ok := s.games[id]; ok {
 		delete(s.games, id)
 	} else {
-		return fmt.Errorf("id does not exist")
+		return ErrInvalidId
 	}
 
 	return nil
@@ -93,7 +91,7 @@ func resetWordleStore() {
 
 func validateId(id string) error {
 	if len(id) < 1 {
-		return fmt.Errorf("invalid id")
+		return ErrInvalidId
 	}
 
 	return nil

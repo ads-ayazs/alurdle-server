@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"strings"
 
 	"aluance.io/wordle/internal/config"
@@ -15,7 +14,7 @@ func validateWord(s string, options ...interface{}) (string, error) {
 	}
 
 	if len(s) != config.CONFIG_GAME_WORDLENGTH {
-		return s, fmt.Errorf("invalid word length")
+		return s, ErrWordLength
 	}
 
 	s = strings.ToUpper(s)
@@ -26,7 +25,7 @@ func validateWord(s string, options ...interface{}) (string, error) {
 	}
 
 	if !dictionary.IsWordValid(s) {
-		return s, fmt.Errorf("word is not in dictionary")
+		return s, ErrInvalidWord
 	}
 
 	return s, nil
