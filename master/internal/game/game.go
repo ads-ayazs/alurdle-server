@@ -114,7 +114,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 		if err == ErrWordLength {
 			return g.statusReport(), err
 		}
-		return g.statusReport(), nil
+		return g.statusReport(), err
 	}
 	attempt.IsValidWord = true
 	g.ValidAttempts++

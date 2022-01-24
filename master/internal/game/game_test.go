@@ -2,7 +2,6 @@ package game
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -86,8 +85,8 @@ func TestPlay(t *testing.T) {
 		tryResult   []LetterHint
 		err         error
 	}{
-		{createWord: "happy", tryWord: "", err: errors.New("invalid word length")},
-		{createWord: "happy", tryWord: "zzzzz", gameMap: map[string]interface{}{"attemptsUsed": 0, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": false, "tryWord": "ZZZZZ"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: errors.New("word is not in dictionary")},
+		{createWord: "happy", tryWord: "", err: ErrWordLength},
+		{createWord: "happy", tryWord: "zzzzz", gameMap: map[string]interface{}{"attemptsUsed": 0, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": false, "tryWord": "ZZZZZ"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: ErrInvalidWord},
 		{createWord: "happy", tryWord: "happy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 1, "secretWord": "HAPPY", "winningAttempt": 1}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "HAPPY"}, tryResult: []LetterHint{1, 1, 1, 1, 1}, err: nil},
 		{createWord: "happy", tryWord: "puppy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "PUPPY"}, tryResult: []LetterHint{3, 3, 1, 1, 1}, err: nil},
 		{createWord: "happy", tryWord: "bless", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "BLESS"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: nil},
