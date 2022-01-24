@@ -226,7 +226,7 @@ func TestDelete(t *testing.T) {
 			continue // This test returned a valid error so move to the next test
 		}
 
-		assert.EqualError(err, "id does not exist")
+		assert.ErrorIs(err, ErrInvalidId)
 		assert.Equal(storeSize, len(v.games))
 	}
 
