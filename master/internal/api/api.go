@@ -52,8 +52,17 @@ func getPlay(c *gin.Context) {
 		c.String(http.StatusBadRequest, "incorrect ID - game.Retrieve() failed")
 		return
 	}
+
 	out, err := g.Play(guessWord)
 	if err != nil {
+		safeErrors := []error{game.ErrGameOver, game.ErrInvalidWord, game.ErrOutOfTurns}
+		for _, safe := range safeErrors {
+			if err == safe {
+				c.String(http.StatusOK, out)
+				return
+			}
+		}
+
 		c.String(http.StatusBadRequest, "guess word error - game.Play() failed")
 		return
 	}

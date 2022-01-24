@@ -75,7 +75,7 @@ func TestGetPlay(t *testing.T) {
 		{id: "<ID>", guess: "grand"},
 		{id: "<ID>", guess: "smile"},
 		{id: "<ID>", guess: "poems"},
-		{id: "<ID>", guess: "imply", errMsg: "game finished"},
+		{id: "<ID>", guess: "imply"},
 	}
 	startWord := "poems"
 
