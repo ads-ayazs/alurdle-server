@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"aluance.io/wordle/internal/config"
 	"aluance.io/wordle/internal/dictionary"
 	"aluance.io/wordle/internal/store"
 	"github.com/rs/xid"
@@ -52,7 +53,7 @@ func Create(secretWord string) (Game, error) {
 		}
 	}
 
-	sw, err := validateWord(secretWord)
+	sw, err := validateWord(secretWord, secretWord)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 		return g.statusReport(), fmt.Errorf("out of turns")
 	}
 
-	tw, err := validateWord(tryWord)
+	tw, err := validateWord(tryWord, g.SecretWord)
 	if err != nil {
 		return "{}", err
 	}
@@ -116,14 +117,8 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 
 	// Score the tryWord letters against the secret
 	score := attempt.TryResult
-	for i := 0; i < 5; i++ {
-		if g.SecretWord[i] == byte(tw[i]) {
-			score[i] = Green
-		} else if idx := strings.Index(g.SecretWord, string(tw[i])); idx >= 0 {
-			score[i] = Yellow
-		} else {
-			score[i] = Grey
-		}
+	if err := g.scoreWord(tw, &score); err != nil {
+		return g.turnReport(attempt), err
 	}
 
 	// Check for end of game conditions
@@ -200,7 +195,7 @@ func (g *wordleGame) addAttempt() *WordleAttempt {
 
 	wa.TryWord = ""
 	wa.IsValidWord = false
-	wa.TryResult = make([]LetterHint, 5)
+	wa.TryResult = make([]LetterHint, config.CONFIG_GAME_WORDLENGTH)
 
 	g.Attempts = append(g.Attempts, wa)
 
@@ -253,4 +248,43 @@ func (g wordleGame) turnReport(a *WordleAttempt) string {
 	return string(b)
 }
 
-// func (g wordleGame) copy() {}
+func (g wordleGame) scoreWord(tryWord string, result *[]LetterHint) error {
+	if result == nil {
+		return fmt.Errorf("nil result provided")
+	}
+	score := *result
+
+	// Rules for scoring:
+	// 1. If the correct letter is in the correct location, mark it green
+	// 2. If the letter is correct but in an incorrect location, mark it
+	//    yellow UNLESS the same letter is also provided in the correct location.
+	// 3. No letter should be marked yellow or green more times than it occurs
+	//    in the secret word.
+	// 4. Remaining unmarked letters must be marked grey.
+	//
+	for i := 0; i < config.CONFIG_GAME_WORDLENGTH; i++ {
+		if g.SecretWord[i] == byte(tryWord[i]) {
+			score[i] = Green // exact match
+			continue
+		} else if count := strings.Count(g.SecretWord, string(tryWord[i])); count > 0 {
+			// Letter is definitely in the secret word. Check if there are other instances of the
+			// same letter that are or will be marked green or yellow elsewhere in the word.
+			if countLeft := strings.Count(g.SecretWord[0:i], string(tryWord[i])); countLeft > 0 {
+				// If letter occured fewer times in tryWord than secret, mark is yellow
+				if strings.Count(tryWord[0:i], string(tryWord[i])) <= countLeft {
+					score[i] = Yellow
+					continue
+				}
+			}
+			if countRight := strings.Count(g.SecretWord[i:config.CONFIG_GAME_WORDLENGTH-1], string(tryWord[i])); countRight > 0 {
+				if strings.Count(tryWord[i:config.CONFIG_GAME_WORDLENGTH-1], string(tryWord[i])) <= countRight {
+					score[i] = Yellow
+					continue
+				}
+			}
+		}
+		score[i] = Grey
+	}
+
+	return nil
+}

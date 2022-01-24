@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -92,7 +93,7 @@ func TestPlay(t *testing.T) {
 		{createWord: "happy", tryWord: "", result: "{}", err: errors.New("invalid word length")},
 		{createWord: "happy", tryWord: "zzzzz", result: "{\"AttemptsUsed\":0,\"GameStatus\":\"InPlay\",\"IsValidWord\":false,\"TryResult\":[3,3,3,3,3],\"TryWord\":\"ZZZZZ\"}", err: errors.New("word is not in dictionary")},
 		{createWord: "happy", tryWord: "happy", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"Won\",\"IsValidWord\":true,\"TryResult\":[1,1,1,1,1],\"TryWord\":\"HAPPY\",\"WinningAttempt\":1}", err: nil},
-		{createWord: "happy", tryWord: "puppy", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[2,3,1,1,1],\"TryWord\":\"PUPPY\"}", err: nil},
+		{createWord: "happy", tryWord: "puppy", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[3,3,1,1,1],\"TryWord\":\"PUPPY\"}", err: nil},
 		{createWord: "happy", tryWord: "bless", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[3,3,3,3,3],\"TryWord\":\"BLESS\"}", err: nil},
 	}
 
@@ -210,4 +211,43 @@ func TestRetrieve(t *testing.T) {
 		require.True(ok)
 		assert.Equal(test.id, v.Id)
 	}
+}
+
+func TestScoreWord(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	tests := []struct {
+		createWord string
+		tryWord    string
+		result     []LetterHint
+		err        error
+	}{
+		{createWord: "happy", tryWord: "seven", result: []LetterHint{Grey, Grey, Grey, Grey, Grey}, err: nil},
+		{createWord: "happy", tryWord: "heave", result: []LetterHint{Green, Grey, Yellow, Grey, Grey}, err: nil},
+		{createWord: "happy", tryWord: "paint", result: []LetterHint{Yellow, Green, Grey, Grey, Grey}, err: nil},
+		{createWord: "happy", tryWord: "peppy", result: []LetterHint{Grey, Grey, Green, Green, Green}, err: nil},
+		{createWord: "happy", tryWord: "happy", result: []LetterHint{Green, Green, Green, Green, Green}, err: nil},
+		{createWord: "knoll", tryWord: "wooly", result: []LetterHint{Grey, Grey, Green, Green, Grey}, err: nil},
+	}
+
+	for _, test := range tests {
+		// Create test game
+		game, err := Create(test.createWord)
+		require.NoError(err, "Create() returned error when creating Game")
+		require.NotNil(game, "unable to create a Game object")
+
+		v, ok := game.(*wordleGame)
+		require.True(ok)
+
+		r := []LetterHint{Blank, Blank, Blank, Blank, Blank}
+		err = v.scoreWord(strings.ToUpper(test.tryWord), &r)
+		if test.err != nil {
+			assert.Error(err)
+			assert.EqualError(test.err, err.Error())
+		}
+		assert.NoError(err, fmt.Sprintf("\"%s\": %s", test.tryWord, err))
+		assert.Exactly(test.result, r, fmt.Sprintf("\"%s\": score results do not match", test.tryWord))
+	}
+
 }
