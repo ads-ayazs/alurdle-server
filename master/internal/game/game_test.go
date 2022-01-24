@@ -250,6 +250,7 @@ func TestScoreWord(t *testing.T) {
 		{createWord: "happy", tryWord: "peppy", result: []LetterHint{Grey, Grey, Green, Green, Green}, err: nil},
 		{createWord: "happy", tryWord: "happy", result: []LetterHint{Green, Green, Green, Green, Green}, err: nil},
 		{createWord: "knoll", tryWord: "wooly", result: []LetterHint{Grey, Grey, Green, Green, Grey}, err: nil},
+		{createWord: "paths", tryWord: "saved", result: []LetterHint{Yellow, Green, Grey, Grey, Grey}, err: nil},
 	}
 
 	for _, test := range tests {

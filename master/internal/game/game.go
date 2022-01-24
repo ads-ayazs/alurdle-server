@@ -264,8 +264,8 @@ func (g wordleGame) scoreWord(tryWord string, result *[]LetterHint) error {
 					continue
 				}
 			}
-			if countRight := strings.Count(g.SecretWord[i:config.CONFIG_GAME_WORDLENGTH-1], string(tryWord[i])); countRight > 0 {
-				if strings.Count(tryWord[i:config.CONFIG_GAME_WORDLENGTH-1], string(tryWord[i])) <= countRight {
+			if countRight := strings.Count(g.SecretWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])); countRight > 0 {
+				if strings.Count(tryWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])) <= countRight {
 					score[i] = Yellow
 					continue
 				}
