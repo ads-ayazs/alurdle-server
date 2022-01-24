@@ -49,12 +49,9 @@ func TestGetGame(t *testing.T) {
 		mapResult := map[string]interface{}{}
 		assert.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult))
 
-		testElements := []string{"Id", "Status", "SecretWord", "Attempts"}
+		testElements := []string{"id", "gameStatus", "attempts"}
 		for _, elem := range testElements {
 			assert.Contains(mapResult, elem)
-		}
-		if len(test.word) > 0 {
-			assert.Equal(strings.ToUpper(test.word), mapResult["SecretWord"].(string))
 		}
 		if v, ok := mapResult["id"]; ok {
 			gameId = v.(string)
@@ -71,7 +68,7 @@ func TestGetPlay(t *testing.T) {
 		{id: "", guess: "", errMsg: "invalid id"},
 		{id: "<ID>", guess: "", errMsg: "invalid guess"},
 		{id: "<ID>", guess: "alphabet", errMsg: "invalid guess"},
-		{id: "<ID>", guess: "adieu", errMsg: "invalid guess"},
+		{id: "<ID>", guess: "adieu"},
 		{id: "<ID>", guess: "handy"},
 		{id: "<ID>", guess: "happy"},
 		{id: "<ID>", guess: "bless"},
@@ -101,7 +98,7 @@ func TestGetPlay(t *testing.T) {
 
 	mapResult := map[string]interface{}{}
 	require.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult))
-	gameId := mapResult["Id"].(string)
+	gameId := mapResult["id"].(string)
 	require.NotEmpty(gameId)
 
 	// Test plays
@@ -143,7 +140,7 @@ func TestGetResign(t *testing.T) {
 	mapResult := map[string]interface{}{}
 	require.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult))
 
-	v, ok := mapResult["Id"]
+	v, ok := mapResult["id"]
 	require.True(ok)
 	gameId := v.(string)
 
@@ -160,9 +157,9 @@ func TestGetResign(t *testing.T) {
 
 	mapResult = map[string]interface{}{}
 	require.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult))
-	testElements := []string{"AttemptsUsed", "GameStatus"}
+	testElements := []string{"attemptsUsed", "gameStatus"}
 	for _, elem := range testElements {
 		assert.Contains(mapResult, elem)
 	}
-	assert.Equal(mapResult["GameStatus"].(string), "Resigned")
+	assert.EqualValues(3, mapResult["gameStatus"])
 }

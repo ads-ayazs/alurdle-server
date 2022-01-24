@@ -34,7 +34,7 @@ func getGame(c *gin.Context) {
 		g, _ = game.Retrieve(gameId)
 	}
 
-	out, _ := g.State()
+	out, _ := g.Describe()
 
 	c.String(http.StatusOK, out)
 }
