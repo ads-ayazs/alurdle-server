@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"aluance.io/wordle/master/internal/dictionary"
 	"aluance.io/wordle/master/internal/store"
 	"github.com/rs/xid"
 )
@@ -44,11 +45,17 @@ type Game interface {
 
 // Factory used to create a game
 func Create(secretWord string) (Game, error) {
+	if len(secretWord) < 1 {
+		var err error
+		if secretWord, err = dictionary.GenerateWord(); err != nil {
+			return nil, err
+		}
+	}
+
 	sw, err := validateWord(secretWord)
 	if err != nil {
 		return nil, err
 	}
-	// game := new(wordleGame)
 	game := &wordleGame{}
 	game.Id = xid.New().String()
 	game.SecretWord = sw
@@ -99,8 +106,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	}
 
 	tw, err := validateWord(tryWord)
-	if err != nil && len(tryWord) != 5 {
-		// Not a valid attempt (word must be excatly 5 characters long)
+	if err != nil {
 		return "{}", err
 	}
 
@@ -111,10 +117,9 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	// Score the tryWord letters against the secret
 	score := attempt.TryResult
 	for i := 0; i < 5; i++ {
-		idx := strings.Index(g.SecretWord, string(tw[i]))
-		if idx == i {
+		if g.SecretWord[i] == byte(tw[i]) {
 			score[i] = Green
-		} else if idx >= 0 {
+		} else if idx := strings.Index(g.SecretWord, string(tw[i])); idx >= 0 {
 			score[i] = Yellow
 		} else {
 			score[i] = Grey

@@ -3,6 +3,8 @@ package game
 import (
 	"fmt"
 	"strings"
+
+	"aluance.io/wordle/master/internal/dictionary"
 )
 
 func validateWord(s string) (string, error) {
@@ -10,7 +12,9 @@ func validateWord(s string) (string, error) {
 		return s, fmt.Errorf("invalid word length")
 	}
 
-	// TODO Check if tryWord is valid in dictionary
+	if !dictionary.IsWordValid(s) {
+		return s, fmt.Errorf("word is not in dictionary")
+	}
 
 	return strings.ToUpper(s), nil
 }
