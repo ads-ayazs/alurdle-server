@@ -1,7 +1,5 @@
 package game
 
-import "encoding/json"
-
 // Enum for letter hints returned after each attempt
 type LetterHint int
 
@@ -14,19 +12,11 @@ const (
 )
 
 type WordleAttempt struct {
-	TryWord     string
-	IsValidWord bool
-	TryResult   []LetterHint
+	TryWord     string       `json:"tryWord"`
+	IsValidWord bool         `json:"isValidWord"`
+	TryResult   []LetterHint `json:"tryResult"`
 }
 
-func (a *WordleAttempt) String() string {
-	b, err := json.Marshal(a)
-	if err != nil {
-		return "{}"
-	}
-
-	return (string(b))
-}
 
 func (h LetterHint) String() string {
 	switch h {
