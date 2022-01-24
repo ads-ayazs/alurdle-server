@@ -27,10 +27,6 @@ func getGame(c *gin.Context) {
 	gameId := c.Query("id")
 	startWord := c.Query("word")
 
-	if len(startWord) < 1 {
-		startWord = "blank"
-	}
-
 	var g game.Game
 	if len(gameId) < 1 {
 		g, _ = game.Create(startWord)
