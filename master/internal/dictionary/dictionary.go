@@ -4,11 +4,23 @@ import (
 	"bufio"
 	"math/rand"
 	"os"
+	"path"
+	"strings"
+	"time"
+
+	"aluance.io/wordle/master/internal/config"
+	"github.com/matryer/resync"
 )
 
-const CONFIG_DICTIONARY_FILENAME = "google-10000-english-usa-no-swears-medium.txt"
+const CONFIG_DICTIONARY_FILEPATH = "data/google-10000-english-usa-no-swears-medium.txt"
+
+// const CONFIG_DICTIONARY_FILENAME = "google-10000-english-usa-no-swears-medium.txt"
 
 func GenerateWord() (string, error) {
+	if err := Initialize(""); err != nil {
+		return "", err
+	}
+
 	word := "blank"
 	if max := wordleDict.size(); max > 0 {
 		index := rand.Intn(max)
@@ -19,7 +31,11 @@ func GenerateWord() (string, error) {
 }
 
 func IsWordValid(w string) bool {
-	if member, ok := wordleDict.wordMap[w]; ok {
+	if err := Initialize(""); err != nil {
+		return false
+	}
+
+	if member, ok := wordleDict.wordMap[strings.ToLower(w)]; ok {
 		return member
 	}
 
@@ -27,8 +43,14 @@ func IsWordValid(w string) bool {
 }
 
 func Initialize(filename string) error {
+
+	// Only initialized dictionary once
+	if wordleDict.initalized {
+		return nil
+	}
+
 	if len(filename) < 1 {
-		filename = CONFIG_DICTIONARY_FILENAME
+		filename = path.Join(config.RootDir(), CONFIG_DICTIONARY_FILEPATH)
 	}
 
 	f, err := os.Open(filename)
@@ -37,33 +59,46 @@ func Initialize(filename string) error {
 	}
 	defer f.Close()
 
-	wordleDict.words = []string{}
-	wordleDict.wordMap = make(map[string]bool)
+	// Do this only once (unless reset)
+	wordleDict.init_once.Do(func() {
+		rand.Seed(time.Now().UnixNano())
 
-	// Load only 5-letter words from the file
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		word := scanner.Text()
-		if len(word) == 5 {
-			wordleDict.words = append(wordleDict.words, word)
-			wordleDict.wordMap[word] = true
+		// Load only 5-letter words from the file
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			word := scanner.Text()
+			if len(word) == 5 {
+				wordleDict.words = append(wordleDict.words, word)
+				wordleDict.wordMap[word] = true
+			}
 		}
-	}
 
-	if err := scanner.Err(); err != nil {
-		return err
-	}
+		if err := scanner.Err(); err != nil {
+			return
+		}
+
+		wordleDict.initalized = true
+	})
 
 	return nil
 }
 
 type dict struct {
-	words   []string
-	wordMap map[string]bool
+	init_once  resync.Once
+	initalized bool
+	words      []string
+	wordMap    map[string]bool
 }
 
 func (d dict) size() int {
 	return len(d.words)
 }
 
-var wordleDict = &dict{}
+func (d *dict) reset() {
+	d.words = []string{}
+	d.wordMap = make(map[string]bool)
+	d.init_once.Reset()
+	d.initalized = false
+}
+
+var wordleDict = &dict{initalized: false, words: []string{}, wordMap: make(map[string]bool)}

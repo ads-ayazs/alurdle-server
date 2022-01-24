@@ -18,14 +18,14 @@ func TestCreate(t *testing.T) {
 		result     wordleGame
 		err        error
 	}{
-		{secretWord: "", result: wordleGame{SecretWord: "", Attempts: []*WordleAttempt{}}, err: errors.New("invalid word length")},
-		{secretWord: "adieu", result: wordleGame{SecretWord: "ADIEU", Attempts: []*WordleAttempt{}}, err: nil},
-		{secretWord: "OuiJa", result: wordleGame{SecretWord: "OUIJA", Attempts: []*WordleAttempt{}}, err: nil},
+		{secretWord: "", result: wordleGame{SecretWord: "", Attempts: []*WordleAttempt{}}, err: nil},
+		{secretWord: "happy", result: wordleGame{SecretWord: "HAPPY", Attempts: []*WordleAttempt{}}, err: nil},
+		{secretWord: "hAPpY", result: wordleGame{SecretWord: "HAPPY", Attempts: []*WordleAttempt{}}, err: nil},
 	}
 
 	for _, test := range tests {
 		g, err := Create(test.secretWord)
-		assert.IsType(test.err, err)
+		assert.IsType(test.err, err, fmt.Sprintf("\"%s\": %s", test.secretWord, err))
 		if err != nil {
 			assert.EqualError(err, test.err.Error())
 			continue // This test returned a valid error so move to the next test
@@ -35,7 +35,9 @@ func TestCreate(t *testing.T) {
 			v, ok := g.(*wordleGame)
 			assert.True(ok)
 
-			assert.Equal(test.result.SecretWord, v.SecretWord, "secretWord doesn't match")
+			if len(test.result.SecretWord) > 0 {
+				assert.Equal(test.result.SecretWord, v.SecretWord, "secretWord doesn't match")
+			}
 			assert.Equal(test.result.Attempts, v.Attempts, "attempts doesn't match")
 		}
 	}
@@ -50,7 +52,7 @@ func TestDescribe(t *testing.T) {
 		result     string
 		err        error
 	}{
-		{createWord: "Adieu", result: "{\"Id\":\"a0bcxxxx0x0x0x00xxxx\",\"Status\":0,\"SecretWord\":\"ADIEU\",\"Attempts\":[]}", err: nil},
+		{createWord: "Happy", result: "{\"Id\":\"a0bcxxxx0x0x0x00xxxx\",\"Status\":0,\"SecretWord\":\"HAPPY\",\"Attempts\":[]}", err: nil},
 	}
 
 	for _, test := range tests {
@@ -87,10 +89,11 @@ func TestPlay(t *testing.T) {
 		result     string
 		err        error
 	}{
-		{createWord: "adieu", tryWord: "", result: "{}", err: errors.New("invalid word length")},
-		{createWord: "adieu", tryWord: "zzzzz", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[3,3,3,3,3],\"TryWord\":\"ZZZZZ\"}", err: nil},
-		{createWord: "adieu", tryWord: "ADIeu", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"Won\",\"IsValidWord\":true,\"TryResult\":[1,1,1,1,1],\"TryWord\":\"ADIEU\",\"WinningAttempt\":1}", err: nil},
-		{createWord: "adieu", tryWord: "ouija", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[3,2,1,3,2],\"TryWord\":\"OUIJA\"}", err: nil},
+		{createWord: "happy", tryWord: "", result: "{}", err: errors.New("invalid word length")},
+		{createWord: "happy", tryWord: "zzzzz", result: "{\"AttemptsUsed\":0,\"GameStatus\":\"InPlay\",\"IsValidWord\":false,\"TryResult\":[3,3,3,3,3],\"TryWord\":\"ZZZZZ\"}", err: errors.New("word is not in dictionary")},
+		{createWord: "happy", tryWord: "happy", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"Won\",\"IsValidWord\":true,\"TryResult\":[1,1,1,1,1],\"TryWord\":\"HAPPY\",\"WinningAttempt\":1}", err: nil},
+		{createWord: "happy", tryWord: "puppy", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[2,3,1,1,1],\"TryWord\":\"PUPPY\"}", err: nil},
+		{createWord: "happy", tryWord: "bless", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[3,3,3,3,3],\"TryWord\":\"BLESS\"}", err: nil},
 	}
 
 	for _, test := range tests {
@@ -99,7 +102,7 @@ func TestPlay(t *testing.T) {
 		require.NotNil(game, "unable to create a Game object")
 
 		s, err := game.Play(test.tryWord)
-		assert.IsType(test.err, err, "returned unexpected error")
+		assert.IsType(test.err, err, fmt.Sprintf("\"%s\" unexpected error: %s", test.tryWord, err))
 		if err != nil {
 			assert.EqualError(err, test.err.Error(), "returned unexpected error")
 			continue // This test returned a valid error so move to the next test
@@ -122,7 +125,7 @@ func TestResign(t *testing.T) {
 		result     string
 		err        error
 	}{
-		{createWord: "adieu", result: "{\"AttemptsUsed\":0,\"GameStatus\":\"Resigned\"}", err: nil},
+		{createWord: "bless", result: "{\"AttemptsUsed\":0,\"GameStatus\":\"Resigned\"}", err: nil},
 	}
 
 	for _, test := range tests {
@@ -150,7 +153,7 @@ func TestAddAttempt(t *testing.T) {
 		createWord string
 		result     *WordleAttempt
 	}{
-		{createWord: "adieu", result: &WordleAttempt{TryWord: "", IsValidWord: false, TryResult: []LetterHint{0, 0, 0, 0, 0}}},
+		{createWord: "proxy", result: &WordleAttempt{TryWord: "", IsValidWord: false, TryResult: []LetterHint{0, 0, 0, 0, 0}}},
 	}
 	for _, test := range tests {
 		game, err := Create(test.createWord)
@@ -177,7 +180,7 @@ func TestRetrieve(t *testing.T) {
 		id         string
 		err        error
 	}{
-		{createWord: "Adieu", id: "", err: nil},
+		{createWord: "seven", id: "", err: nil},
 	}
 
 	// Create test games

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -70,11 +71,12 @@ func TestGetPlay(t *testing.T) {
 		{id: "", guess: "", errMsg: "invalid id"},
 		{id: "<ID>", guess: "", errMsg: "invalid guess"},
 		{id: "<ID>", guess: "alphabet", errMsg: "invalid guess"},
-		{id: "<ID>", guess: "adieu"},
+		{id: "<ID>", guess: "adieu", errMsg: "invalid guess"},
 		{id: "<ID>", guess: "handy"},
-		{id: "<ID>", guess: "mance"},
+		{id: "<ID>", guess: "happy"},
+		{id: "<ID>", guess: "bless"},
 		{id: "<ID>", guess: "grand"},
-		{id: "<ID>", guess: "danes"},
+		{id: "<ID>", guess: "smile"},
 		{id: "<ID>", guess: "poems"},
 		{id: "<ID>", guess: "imply", errMsg: "game finished"},
 	}
@@ -115,12 +117,12 @@ func TestGetPlay(t *testing.T) {
 
 		router.ServeHTTP(w, req)
 		if len(test.errMsg) > 0 {
-			assert.NotEqual(http.StatusOK, w.Code)
-		} else if assert.Equal(http.StatusOK, w.Code) {
+			assert.NotEqual(http.StatusOK, w.Code, test.guess)
+		} else if assert.Equal(http.StatusOK, w.Code, fmt.Sprintf("\"%s\": %s", test.guess, w.Body.String())) {
 			assert.NotEmpty(w.Body.Bytes())
 
 			mapResult := map[string]interface{}{}
-			assert.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult))
+			assert.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult), test.guess)
 		}
 	}
 }
