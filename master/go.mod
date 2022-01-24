@@ -1,4 +1,4 @@
-module aluance.io/wordle/master
+module aluance.io/wordle
 
 go 1.17
 

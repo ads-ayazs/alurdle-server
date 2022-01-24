@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"strings"
 
-	"aluance.io/wordle/master/internal/dictionary"
-	"aluance.io/wordle/master/internal/store"
+	"aluance.io/wordle/internal/dictionary"
+	"aluance.io/wordle/internal/store"
 	"github.com/rs/xid"
 )
 

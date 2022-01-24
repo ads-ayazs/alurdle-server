@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"aluance.io/wordle/master/internal/game"
+	"aluance.io/wordle/internal/game"
 	"github.com/gin-gonic/gin"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"aluance.io/wordle/master/internal/dictionary"
+	"aluance.io/wordle/internal/dictionary"
 )
 
 func validateWord(s string) (string, error) {

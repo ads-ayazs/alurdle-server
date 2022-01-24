@@ -8,13 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"aluance.io/wordle/master/internal/config"
+	"aluance.io/wordle/internal/config"
 	"github.com/matryer/resync"
 )
 
 const CONFIG_DICTIONARY_FILEPATH = "data/google-10000-english-usa-no-swears-medium.txt"
-
-// const CONFIG_DICTIONARY_FILENAME = "google-10000-english-usa-no-swears-medium.txt"
 
 func GenerateWord() (string, error) {
 	if err := Initialize(""); err != nil {
@@ -28,6 +26,10 @@ func GenerateWord() (string, error) {
 	}
 
 	return word, nil
+}
+
+func Foo(bar string) string {
+	return "foo.bar"
 }
 
 func IsWordValid(w string) bool {
