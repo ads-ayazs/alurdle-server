@@ -12,13 +12,16 @@ WORKDIR /app
 # Download the required go modules
 COPY ./app/go.mod ./
 COPY ./app/go.sum ./
-RUN go mod download
+COPY ./app/Makefile ./
+# RUN go mod download
+RUN make dep
 
 # Copy source files to the image
 COPY ./app ./
 
 # Build the binary with static linking
-RUN CGO_ENABLED=0 go build -o /wordle-master
+# RUN CGO_ENABLED=0 go build -o /wordle-master
+RUN CGO_ENABLED=0 make outfile=/wordle-master deploy
 
 
 
