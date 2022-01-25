@@ -12,8 +12,6 @@ import (
 	"github.com/matryer/resync"
 )
 
-const CONFIG_DICTIONARY_FILEPATH = "data/google-10000-english-usa-no-swears-medium.txt"
-
 func GenerateWord() (string, error) {
 	if err := Initialize(""); err != nil {
 		return "", err
@@ -52,7 +50,7 @@ func Initialize(filename string) error {
 	}
 
 	if len(filename) < 1 {
-		filename = path.Join(config.RootDir(), CONFIG_DICTIONARY_FILEPATH)
+		filename = path.Join(config.RootDir(), config.CONFIG_DICTIONARY_FILEPATH)
 	}
 
 	f, err := os.Open(filename)
@@ -65,11 +63,11 @@ func Initialize(filename string) error {
 	wordleDict.init_once.Do(func() {
 		rand.Seed(time.Now().UnixNano())
 
-		// Load only 5-letter words from the file
+		// Load only words of configured length from the file
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			word := scanner.Text()
-			if len(word) == 5 {
+			if len(word) == config.CONFIG_GAME_WORDLENGTH {
 				wordleDict.words = append(wordleDict.words, word)
 				wordleDict.wordMap[word] = true
 			}

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"aluance.io/wordle/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +24,7 @@ func TestGenerateWord(t *testing.T) {
 
 	word, err := GenerateWord()
 	assert.NoError(err)
-	assert.Equal(5, len(word))
+	assert.Equal(config.CONFIG_GAME_WORDLENGTH, len(word))
 }
 
 func TestIsWordValid(t *testing.T) {
@@ -73,8 +74,8 @@ func TestInitialize(t *testing.T) {
 	assert.Equal(TEST_DICTIONARY_LENGTH, len(wordleDict.words))
 	assert.Equal(TEST_DICTIONARY_LENGTH, len(wordleDict.wordMap))
 
-	// Test that the length of a random word is 5
-	assert.Equal(5, len(wordleDict.words[rand.Intn(TEST_DICTIONARY_LENGTH)]))
+	// Test the length of a random word
+	assert.Equal(config.CONFIG_GAME_WORDLENGTH, len(wordleDict.words[rand.Intn(TEST_DICTIONARY_LENGTH)]))
 
 	// assert.Equal(wordleDict.words[rand.Intn(TEST_DICTIONARY_LENGTH)], "bless")
 }

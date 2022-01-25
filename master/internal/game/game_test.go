@@ -2,8 +2,8 @@ package game
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -49,10 +49,10 @@ func TestDescribe(t *testing.T) {
 
 	tests := []struct {
 		createWord string
-		result     string
+		result     []string
 		err        error
 	}{
-		{createWord: "Happy", result: "{\"Id\":\"a0bcxxxx0x0x0x00xxxx\",\"Status\":0,\"SecretWord\":\"HAPPY\",\"Attempts\":[]}", err: nil},
+		{createWord: "Happy", result: []string{"attempts", "attemptsUsed", "gameStatus", "id"}, err: nil},
 	}
 
 	for _, test := range tests {
@@ -67,14 +67,8 @@ func TestDescribe(t *testing.T) {
 			continue // This test returned a valid error so move to the next test
 		}
 
-		sMap := map[string]interface{}{}
-		require.NoError(json.Unmarshal([]byte(s), &sMap))
-		for k, v := range sMap {
-			assert.Contains(test.result, k)
-			if k == "Id" {
-				continue
-			}
-			assert.Contains(test.result, fmt.Sprint(v))
+		for _, el := range test.result {
+			assert.Contains(s, el, el)
 		}
 	}
 }
@@ -84,16 +78,18 @@ func TestPlay(t *testing.T) {
 	require := require.New(t)
 
 	tests := []struct {
-		createWord string
-		tryWord    string
-		result     string
-		err        error
+		createWord  string
+		tryWord     string
+		gameMap     map[string]interface{}
+		lastAttempt map[string]interface{}
+		tryResult   []LetterHint
+		err         error
 	}{
-		{createWord: "happy", tryWord: "", result: "{}", err: errors.New("invalid word length")},
-		{createWord: "happy", tryWord: "zzzzz", result: "{\"AttemptsUsed\":0,\"GameStatus\":\"InPlay\",\"IsValidWord\":false,\"TryResult\":[3,3,3,3,3],\"TryWord\":\"ZZZZZ\"}", err: errors.New("word is not in dictionary")},
-		{createWord: "happy", tryWord: "happy", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"Won\",\"IsValidWord\":true,\"TryResult\":[1,1,1,1,1],\"TryWord\":\"HAPPY\",\"WinningAttempt\":1}", err: nil},
-		{createWord: "happy", tryWord: "puppy", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[2,3,1,1,1],\"TryWord\":\"PUPPY\"}", err: nil},
-		{createWord: "happy", tryWord: "bless", result: "{\"AttemptsUsed\":1,\"GameStatus\":\"InPlay\",\"IsValidWord\":true,\"TryResult\":[3,3,3,3,3],\"TryWord\":\"BLESS\"}", err: nil},
+		{createWord: "happy", tryWord: "", err: ErrWordLength},
+		{createWord: "happy", tryWord: "zzzzz", gameMap: map[string]interface{}{"attemptsUsed": 0, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": false, "tryWord": "ZZZZZ"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: ErrInvalidWord},
+		{createWord: "happy", tryWord: "happy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 1, "secretWord": "HAPPY", "winningAttempt": 1}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "HAPPY"}, tryResult: []LetterHint{1, 1, 1, 1, 1}, err: nil},
+		{createWord: "happy", tryWord: "puppy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "PUPPY"}, tryResult: []LetterHint{3, 3, 1, 1, 1}, err: nil},
+		{createWord: "happy", tryWord: "bless", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "BLESS"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: nil},
 	}
 
 	for _, test := range tests {
@@ -108,11 +104,30 @@ func TestPlay(t *testing.T) {
 			continue // This test returned a valid error so move to the next test
 		}
 
-		assert.Equal(test.result, s, "returned unexpected result")
+		// Convert returned string to interface map for inspection
+		out := map[string]interface{}{}
+		err = json.Unmarshal([]byte(s), &out)
+		assert.NoError(err)
 
-		v, ok := game.(*wordleGame)
-		require.True(ok)
-		assert.NotZero(len(v.Attempts))
+		// Are gameMap test values in return?
+		for k, v := range test.gameMap {
+			assert.EqualValues(v, out[k], out)
+		}
+		// Are last attempt test values in return?
+		for k, v := range test.lastAttempt {
+			attempts := out["attempts"].([]interface{})
+			if last := len(attempts) - 1; last >= 0 {
+				lastAttempt := attempts[last].(map[string]interface{})
+				assert.EqualValues(v, lastAttempt[k], out)
+
+				// Does most recent tryResult match return?
+				if tr, ok := lastAttempt["tryResult"].([]LetterHint); ok {
+					for i := range test.tryResult {
+						assert.EqualValues(test.tryResult[i], tr[i])
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -122,10 +137,10 @@ func TestResign(t *testing.T) {
 
 	tests := []struct {
 		createWord string
-		result     string
+		result     map[string]interface{}
 		err        error
 	}{
-		{createWord: "bless", result: "{\"AttemptsUsed\":0,\"GameStatus\":\"Resigned\"}", err: nil},
+		{createWord: "bless", result: map[string]interface{}{"gameStatus": 3}, err: nil},
 	}
 
 	for _, test := range tests {
@@ -140,11 +155,18 @@ func TestResign(t *testing.T) {
 			continue // This test returned a valid error so move to the next test
 		}
 
-		assert.Equal(test.result, s, "returned unexpected result")
+		// assert.Equal(test.result, s, "returned unexpected result")
+		// Convert returned string to interface map for inspection
+		out := map[string]interface{}{}
+		err = json.Unmarshal([]byte(s), &out)
+		assert.NoError(err)
+
+		for k, v := range test.result {
+			assert.EqualValues(v, out[k])
+		}
 	}
 }
 
-//func (g *wordleGame) addAttempt() *WordleAttempt
 func TestAddAttempt(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
@@ -170,7 +192,6 @@ func TestAddAttempt(t *testing.T) {
 	}
 }
 
-//func Retrieve(id string) (*Game, error)
 func TestRetrieve(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
@@ -210,4 +231,44 @@ func TestRetrieve(t *testing.T) {
 		require.True(ok)
 		assert.Equal(test.id, v.Id)
 	}
+}
+
+func TestScoreWord(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	tests := []struct {
+		createWord string
+		tryWord    string
+		result     []LetterHint
+		err        error
+	}{
+		{createWord: "happy", tryWord: "seven", result: []LetterHint{Grey, Grey, Grey, Grey, Grey}, err: nil},
+		{createWord: "happy", tryWord: "heave", result: []LetterHint{Green, Grey, Yellow, Grey, Grey}, err: nil},
+		{createWord: "happy", tryWord: "paint", result: []LetterHint{Yellow, Green, Grey, Grey, Grey}, err: nil},
+		{createWord: "happy", tryWord: "peppy", result: []LetterHint{Grey, Grey, Green, Green, Green}, err: nil},
+		{createWord: "happy", tryWord: "happy", result: []LetterHint{Green, Green, Green, Green, Green}, err: nil},
+		{createWord: "knoll", tryWord: "wooly", result: []LetterHint{Grey, Grey, Green, Green, Grey}, err: nil},
+		{createWord: "paths", tryWord: "saved", result: []LetterHint{Yellow, Green, Grey, Grey, Grey}, err: nil},
+	}
+
+	for _, test := range tests {
+		// Create test game
+		game, err := Create(test.createWord)
+		require.NoError(err, "Create() returned error when creating Game")
+		require.NotNil(game, "unable to create a Game object")
+
+		v, ok := game.(*wordleGame)
+		require.True(ok)
+
+		r := []LetterHint{Blank, Blank, Blank, Blank, Blank}
+		err = v.scoreWord(strings.ToUpper(test.tryWord), &r)
+		if test.err != nil {
+			assert.Error(err)
+			assert.EqualError(test.err, err.Error())
+		}
+		assert.NoError(err, fmt.Sprintf("\"%s\": %s", test.tryWord, err))
+		assert.Exactly(test.result, r, fmt.Sprintf("\"%s\": score results do not match", test.tryWord))
+	}
+
 }

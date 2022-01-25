@@ -18,9 +18,9 @@ package game
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
+	"aluance.io/wordle/internal/config"
 	"aluance.io/wordle/internal/dictionary"
 	"aluance.io/wordle/internal/store"
 	"github.com/rs/xid"
@@ -41,6 +41,7 @@ type Game interface {
 	Describe() (string, error)
 	Play(tryWord string) (string, error)
 	Resign() (string, error)
+	// State() (string, error)
 }
 
 // Factory used to create a game
@@ -52,7 +53,7 @@ func Create(secretWord string) (Game, error) {
 		}
 	}
 
-	sw, err := validateWord(secretWord)
+	sw, err := validateWord(secretWord, secretWord)
 	if err != nil {
 		return nil, err
 	}
@@ -85,66 +86,65 @@ func Retrieve(id string) (Game, error) {
 
 	game, ok := content.(Game)
 	if !ok {
-		return nil, fmt.Errorf("content is not a game")
+		return nil, ErrSerialization
 	}
 
 	return game, nil
 }
 
 func (g wordleGame) Describe() (string, error) {
-	gameStr := fmt.Sprint(g)
-	return gameStr, nil
+	return g.statusReport(), nil
 }
 
 func (g *wordleGame) Play(tryWord string) (string, error) {
 	if g.Status != InPlay {
-		return g.statusReport(), fmt.Errorf("game is finished")
+		return g.statusReport(), ErrGameOver
 	}
-	if len(g.Attempts) >= 6 {
+	if len(g.Attempts) >= config.CONFIG_GAME_MAXATTEMPTS ||
+		g.ValidAttempts >= config.CONFIG_GAME_MAXVALIDATTEMPTS {
 		g.Status = Lost
-		return g.statusReport(), fmt.Errorf("out of turns")
-	}
-
-	tw, err := validateWord(tryWord)
-	if err != nil {
-		return "{}", err
+		return g.statusReport(), ErrOutOfTurns
 	}
 
 	attempt := g.addAttempt()
+	tw, err := validateWord(tryWord, g.SecretWord)
 	attempt.TryWord = tw
+	if err != nil {
+		attempt.IsValidWord = false
+		if err == ErrWordLength {
+			return g.statusReport(), err
+		}
+		return g.statusReport(), err
+	}
 	attempt.IsValidWord = true
+	g.ValidAttempts++
 
 	// Score the tryWord letters against the secret
 	score := attempt.TryResult
-	for i := 0; i < 5; i++ {
-		if g.SecretWord[i] == byte(tw[i]) {
-			score[i] = Green
-		} else if idx := strings.Index(g.SecretWord, string(tw[i])); idx >= 0 {
-			score[i] = Yellow
-		} else {
-			score[i] = Grey
-		}
+	if err := g.scoreWord(tw, &score); err != nil {
+		return g.statusReport(), err
 	}
 
 	// Check for end of game conditions
 	if attempt.isWinner() {
 		g.Status = Won
-	} else if len(g.Attempts) >= 6 {
+	} else if len(g.Attempts) >= config.CONFIG_GAME_MAXATTEMPTS ||
+		g.ValidAttempts >= config.CONFIG_GAME_MAXVALIDATTEMPTS {
 		g.Status = Lost
 	}
 
 	// Save to game store
 	gs, err := store.WordleStore()
 	if err != nil {
-		return g.turnReport(attempt), err
+		return g.statusReport(), err
 	}
 	err = gs.Save(g.Id, g)
 	if err != nil {
-		return g.turnReport(attempt), err
+		return g.statusReport(), err
 	}
 
 	// Return the attempt as JSON
-	return g.turnReport(attempt), nil
+	return g.statusReport(), nil
 }
 
 func (g *wordleGame) Resign() (string, error) {
@@ -180,27 +180,28 @@ func (t GameStatusType) String() string {
 }
 
 type wordleGame struct {
-	Id         string
-	Status     GameStatusType
-	SecretWord string
-	Attempts   []*WordleAttempt
+	Id            string           `json:"id"`
+	Status        GameStatusType   `json:"gameStatus"`
+	SecretWord    string           `json:"secretWord"`
+	Attempts      []*WordleAttempt `json:"attempts"`
+	ValidAttempts int              `json:"validAttempts"`
 }
 
-func (g wordleGame) String() string {
-	b, err := json.Marshal(g)
-	if err != nil {
-		return "{}"
-	}
+// func (g wordleGame) String() string {
+// 	b, err := json.Marshal(g)
+// 	if err != nil {
+// 		return "{}"
+// 	}
 
-	return (string(b))
-}
+// 	return (string(b))
+// }
 
 func (g *wordleGame) addAttempt() *WordleAttempt {
 	wa := new(WordleAttempt)
 
 	wa.TryWord = ""
 	wa.IsValidWord = false
-	wa.TryResult = make([]LetterHint, 5)
+	wa.TryResult = make([]LetterHint, config.CONFIG_GAME_WORDLENGTH)
 
 	g.Attempts = append(g.Attempts, wa)
 
@@ -208,14 +209,26 @@ func (g *wordleGame) addAttempt() *WordleAttempt {
 }
 
 func (g wordleGame) statusReport() string {
+	b, err := json.Marshal(g)
+	if err != nil {
+		return "{}"
+	}
+
 	s := map[string]interface{}{}
-	s["GameStatus"] = fmt.Sprint(g.Status)
-	s["AttemptsUsed"] = len(g.Attempts)
+	err = json.Unmarshal(b, &s)
+	if err != nil {
+		return "{}"
+	}
+
+	s["attemptsUsed"] = len(g.Attempts)
+	if g.Status == InPlay {
+		delete(s, "secretWord")
+	}
 	if g.Status == Won {
-		s["WinningAttempt"] = len(g.Attempts)
+		s["winningAttempt"] = len(g.Attempts)
 	}
 
-	b, err := json.Marshal(s)
+	b, err = json.Marshal(s)
 	if err != nil {
 		return "{}"
 	}
@@ -223,34 +236,43 @@ func (g wordleGame) statusReport() string {
 	return string(b)
 }
 
-func (g wordleGame) turnReport(a *WordleAttempt) string {
-	// Convert game status to map
-	sr := g.statusReport()
-	report := map[string]interface{}{}
+func (g wordleGame) scoreWord(tryWord string, result *[]LetterHint) error {
+	if result == nil {
+		return ErrNilResult
+	}
+	score := *result
 
-	if err := json.Unmarshal([]byte(sr), &report); err != nil {
-		return "{}"
+	// Rules for scoring:
+	// 1. If the correct letter is in the correct location, mark it green
+	// 2. If the letter is correct but in an incorrect location, mark it
+	//    yellow UNLESS the same letter is also provided in the correct location.
+	// 3. No letter should be marked yellow or green more times than it occurs
+	//    in the secret word.
+	// 4. Remaining unmarked letters must be marked grey.
+	//
+	for i := 0; i < config.CONFIG_GAME_WORDLENGTH; i++ {
+		if g.SecretWord[i] == byte(tryWord[i]) {
+			score[i] = Green // exact match
+			continue
+		} else if count := strings.Count(g.SecretWord, string(tryWord[i])); count > 0 {
+			// Letter is definitely in the secret word. Check if there are other instances of the
+			// same letter that are or will be marked green or yellow elsewhere in the word.
+			if countLeft := strings.Count(g.SecretWord[0:i], string(tryWord[i])); countLeft > 0 {
+				// If letter occured fewer times in tryWord than secret, mark is yellow
+				if strings.Count(tryWord[0:i], string(tryWord[i])) <= countLeft {
+					score[i] = Yellow
+					continue
+				}
+			}
+			if countRight := strings.Count(g.SecretWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])); countRight > 0 {
+				if strings.Count(tryWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])) <= countRight {
+					score[i] = Yellow
+					continue
+				}
+			}
+		}
+		score[i] = Grey
 	}
 
-	// Convert turn status to map
-	ar := fmt.Sprint(a)
-	arMap := map[string]interface{}{}
-
-	if err := json.Unmarshal([]byte(ar), &arMap); err != nil {
-		return "{}"
-	}
-
-	// Comnine the maps and return as JSON
-	for k, v := range arMap {
-		report[k] = v
-	}
-
-	b, err := json.Marshal(report)
-	if err != nil {
-		return "{}"
-	}
-
-	return string(b)
+	return nil
 }
-
-// func (g wordleGame) copy() {}
