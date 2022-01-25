@@ -3,8 +3,6 @@ package dictionary
 import (
 	"bufio"
 	"math/rand"
-	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -50,10 +48,12 @@ func Initialize(filename string) error {
 	}
 
 	if len(filename) < 1 {
-		filename = path.Join(config.RootDir(), config.CONFIG_DICTIONARY_FILEPATH)
+		// filename = path.Join(config.RootDir(), config.CONFIG_DICTIONARY_FILEPATH)
+		filename = config.CONFIG_DICTIONARY_FILEPATH
 	}
 
-	f, err := os.Open(filename)
+	// f, err := os.Open(filename)
+	f, err := config.LoadEmbedFile(filename)
 	if err != nil {
 		return err
 	}
@@ -82,6 +82,21 @@ func Initialize(filename string) error {
 
 	return nil
 }
+
+/*
+//go:embed data/*
+var embFS embed.FS
+
+func initializeEmbeded() (io.Reader, error) {
+
+	r, err := embFS.Open(config.CONFIG_DICTIONARY_FILEPATH)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+*/
 
 type dict struct {
 	init_once  resync.Once
