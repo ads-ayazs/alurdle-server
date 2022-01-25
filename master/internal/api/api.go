@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"aluance.io/wordle/internal/game"
@@ -30,13 +31,20 @@ func getGame(c *gin.Context) {
 	startWord := c.Query("word")
 
 	var g game.Game
+	var err error
 	if len(gameId) < 1 {
-		g, _ = game.Create(startWord)
+		g, err = game.Create(startWord)
 	} else {
-		g, _ = game.Retrieve(gameId)
+		g, err = game.Retrieve(gameId)
+	}
+	if handleError(c, err) {
+		return
 	}
 
-	out, _ := g.Describe()
+	out, err := g.Describe()
+	if handleError(c, err) {
+		return
+	}
 
 	c.String(http.StatusOK, out)
 }
@@ -50,8 +58,7 @@ func getPlay(c *gin.Context) {
 		return
 	}
 	g, err := game.Retrieve(gameId)
-	if err != nil {
-		c.String(http.StatusBadRequest, "incorrect ID - game.Retrieve() failed")
+	if handleError(c, err) {
 		return
 	}
 
@@ -65,7 +72,7 @@ func getPlay(c *gin.Context) {
 			}
 		}
 
-		c.String(http.StatusBadRequest, "guess word error - game.Play() failed")
+		handleError(c, err)
 		return
 	}
 
@@ -76,19 +83,27 @@ func getResign(c *gin.Context) {
 	gameId := c.Query("id")
 
 	if len(gameId) < 1 {
-		c.String(http.StatusBadRequest, "{ \"error\": \"invalid id\" }")
+		handleError(c, ErrInvalidId)
 		return
 	}
 	g, err := game.Retrieve(gameId)
-	if err != nil {
-		c.String(http.StatusBadRequest, "{ \"error\": \"game.Retrieve() failed\" }")
+	if handleError(c, err) {
 		return
 	}
+
 	out, err := g.Resign()
-	if err != nil {
-		c.String(http.StatusInternalServerError, "{ \"error\": \"game.Resign() failed\" }")
+	if handleError(c, err) {
 		return
 	}
 
 	c.String(http.StatusOK, out)
+}
+
+func handleError(c *gin.Context, err error) bool {
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("{\"error\": \"%s\"}", err.Error()))
+		return true
+	}
+
+	return false
 }
