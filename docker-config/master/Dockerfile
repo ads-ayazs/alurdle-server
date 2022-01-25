@@ -1,13 +1,39 @@
-FROM golang:1.16-alpine
+#
+
+ARG USERNAME=nonroot
+
+##
+## Build stage
+##
+FROM golang:1.17-bullseye as build
 
 WORKDIR /app
 
+# Copy source files to the image
 COPY ./app ./
 
+# Download the required go modules
 RUN go mod download
 
-RUN go build -o /wordle-master
+# Build the binary with static linking
+RUN CGO_ENABLED=0 go build -o /wordle-master
 
+
+
+##
+## Deployable container
+##
+FROM alpine:3.14
+
+ARG USERNAME
+RUN adduser -D -H ${USERNAME}
+
+# Copy output binary from build image
+WORKDIR /
+COPY --from=build /wordle-master /
+
+# Expose port and run as non-privileged user
 EXPOSE 8080
 
-CMD [ "/wordle-master" ]
+USER ${USERNAME}:${USERNAME}
+ENTRYPOINT [ "/wordle-master" ]
