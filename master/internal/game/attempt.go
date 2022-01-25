@@ -17,7 +17,6 @@ type WordleAttempt struct {
 	TryResult   []LetterHint `json:"tryResult"`
 }
 
-
 func (h LetterHint) String() string {
 	switch h {
 	case Blank:

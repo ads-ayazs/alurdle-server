@@ -105,7 +105,7 @@ type dict struct {
 	wordMap    map[string]bool
 }
 
-func (d dict) size() int {
+func (d *dict) size() int {
 	return len(d.words)
 }
 
