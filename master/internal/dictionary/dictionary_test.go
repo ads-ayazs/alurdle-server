@@ -13,13 +13,14 @@ import (
 
 const TEST_DICTIONARY_LENGTH = 1367
 const TEST_DICTIONARY_FILENAME = "google-10000-english-usa-no-swears-medium.txt"
+const TEST_DICTIONARY_FILEPATH = "data/google-10000-english-usa-no-swears-medium.txt"
 
 func TestGenerateWord(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
 	wordleDict.reset()
-	err := Initialize(TEST_DICTIONARY_FILENAME)
+	err := Initialize(TEST_DICTIONARY_FILEPATH)
 	require.NoError(err)
 
 	word, err := GenerateWord()
@@ -32,7 +33,7 @@ func TestIsWordValid(t *testing.T) {
 	require := require.New(t)
 
 	wordleDict.reset()
-	err := Initialize(TEST_DICTIONARY_FILENAME)
+	err := Initialize(TEST_DICTIONARY_FILEPATH)
 	require.NoError(err)
 
 	// Test valid words
@@ -65,7 +66,7 @@ func TestInitialize(t *testing.T) {
 	// Use controled initialization
 	wordleDict.reset()
 	assert.False(wordleDict.initalized)
-	err = Initialize(TEST_DICTIONARY_FILENAME)
+	err = Initialize(TEST_DICTIONARY_FILEPATH)
 	assert.NoError(err)
 
 	// Make sure that the dictionary is not empty
