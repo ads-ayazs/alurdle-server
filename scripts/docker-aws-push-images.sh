@@ -14,14 +14,23 @@
 # REQUIREMENTS
 # - Configure your AWS CLI with credentials that have permission to access the registry and repository.
 # - Set the aws_region and aws_account_id variables below.
-# - Set the names of the containers to be pushed (not including the -build suffix).
+# - Set the names of the images to be pushed (not including the -build suffix).
 
-# ROOT NAMES OF CONTAINERS TO BE PUSHED
+# Find project home folder
+f () { [[ -d ".git" ]] && echo "`pwd`" && exit 0; cd .. && f;}
+project_home=$(f)
+
+# Load .env variables
+set -o allexport
+source ${project_home}/.env
+set +o allexport
+
+# ROOT NAMES OF IMAGES TO BE PUSHED
 image_names=(master)
 
 # SET THESE TO MATCH THE AWS REGISTRY ACCOUNT AND REGION
-aws_region=ca-central-1
-aws_account_id=512704425807
+aws_region=${AWS_REGION} #ca-central-1
+aws_account_id=${AWS_ACCOUNT_ID} #512704425807
 
 # Login to the AWS ECR registry
 aws_reg_name=${3:-"$aws_account_id.dkr.ecr.$aws_region.amazonaws.com"}
@@ -31,9 +40,9 @@ aws ecr get-login-password \
   docker login \
     --username AWS \
     --password-stdin "$aws_reg_name" &> /dev/null
-status=$?
-if [[ ! "${status}" -eq 0 ]]; then
+if [ $? -ne 0 ]; then
   echo "docker login to registry failed. Unable to continue."
+  exit 1
 fi
 
 # Tag the images to be updated with the fully-qualified path
@@ -43,16 +52,22 @@ release_ver=${2:-latest}
 for i in "${image_names[@]}"
 do
   img="$i-release"
-  aws ecr describe-repositories --repository-names $img 2>&1 > /dev/null
-  status=$?
-  if [[ ! "${status}" -eq 0 ]]; then
-      aws ecr create-repository \
-        --repository-name $img
+
+  output=$(aws ecr describe-repositories --max-items 0 --repository-names ${img} 2>&1)
+  if [ $? -ne 0 ]; then
+    if echo ${output} | grep -q RepositoryNotFoundException; then
+      aws ecr create-repository --region ${aws_region} --repository-name ${img} &> /dev/null
+
+      # Allow repository creation to complete
+      sleep 3
+    else
+      >&2 echo ${output}
+    fi
   fi
 
+  # Tag and push local images to the repo
   build_tag="$i-build:$image_ver"
-  release_tag="$reg_name/$img:$release_ver"
+  release_tag="$aws_reg_name/$img:$release_ver"
   docker tag "$build_tag" "$release_tag"
   docker push "$release_tag"
 done
-
