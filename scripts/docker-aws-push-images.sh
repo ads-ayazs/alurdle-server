@@ -13,7 +13,7 @@
 #
 # REQUIREMENTS
 # - Configure your AWS CLI with credentials that have permission to access the registry and repository.
-# - Set the aws_region and aws_account_id variables below.
+# - Set your AWS_REGION and AWS_ACCOUNT_ID environment variables (use .env file).
 # - Set the names of the images to be pushed (not including the -build suffix).
 
 # Find project home folder
