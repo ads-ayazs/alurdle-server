@@ -257,15 +257,15 @@ func (g wordleGame) scoreWord(tryWord string, result *[]LetterHint) error {
 		} else if count := strings.Count(g.SecretWord, string(tryWord[i])); count > 0 {
 			// Letter is definitely in the secret word. Check if there are other instances of the
 			// same letter that are or will be marked green or yellow elsewhere in the word.
-			if countLeft := strings.Count(g.SecretWord[0:i], string(tryWord[i])); countLeft > 0 {
+			if countLeft := strings.Count(g.SecretWord[:i+1], string(tryWord[i])); countLeft > 0 {
 				// If letter occured fewer times in tryWord than secret, mark is yellow
-				if strings.Count(tryWord[0:i], string(tryWord[i])) <= countLeft {
+				if strings.Count(tryWord[:i+1], string(tryWord[i])) <= countLeft {
 					score[i] = Yellow
 					continue
 				}
 			}
-			if countRight := strings.Count(g.SecretWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])); countRight > 0 {
-				if strings.Count(tryWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])) <= countRight {
+			if countRight := strings.Count(g.SecretWord[i:], string(tryWord[i])); countRight > 0 {
+				if strings.Count(tryWord[i:], string(tryWord[i])) <= countRight {
 					score[i] = Yellow
 					continue
 				}
