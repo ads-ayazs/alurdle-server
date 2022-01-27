@@ -17,8 +17,10 @@ Key functions:
 package game
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"aluance.io/wordle/internal/config"
 	"aluance.io/wordle/internal/dictionary"
@@ -62,6 +64,7 @@ func Create(secretWord string) (Game, error) {
 	game.SecretWord = sw
 	game.Attempts = []*WordleAttempt{}
 	game.Status = InPlay
+	game.LastUpdated = time.Now()
 
 	s, err := store.WordleStore()
 	if err != nil {
@@ -133,6 +136,8 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 		g.Status = Lost
 	}
 
+	g.LastUpdated = time.Now()
+
 	// Save to game store
 	gs, err := store.WordleStore()
 	if err != nil {
@@ -149,6 +154,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 
 func (g *wordleGame) Resign() (string, error) {
 	g.Status = Resigned
+	g.LastUpdated = time.Now()
 
 	// Save to game store
 	gs, err := store.WordleStore()
@@ -163,18 +169,42 @@ func (g *wordleGame) Resign() (string, error) {
 	return g.statusReport(), nil
 }
 
+func (t GameStatusType) MarshalJSON() ([]byte, error) {
+	buf := bytes.NewBufferString(`"`)
+	buf.WriteString(mapGameStatusToString[t])
+	buf.WriteString(`"`)
+	return buf.Bytes(), nil
+}
+
+func (t *GameStatusType) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	*t = mapStringToGameStatus[s]
+	return nil
+}
+
 /////////////
 
+var mapGameStatusToString = map[GameStatusType]string{
+	InPlay:   "InPlay",
+	Won:      "Won",
+	Lost:     "Lost",
+	Resigned: "Resigned",
+}
+
+var mapStringToGameStatus = map[string]GameStatusType{
+	"InPlay":   InPlay,
+	"Won":      Won,
+	"Lost":     Lost,
+	"Resigned": Resigned,
+}
+
 func (t GameStatusType) String() string {
-	switch t {
-	case InPlay:
-		return "InPlay"
-	case Won:
-		return "Won"
-	case Lost:
-		return "Lost"
-	case Resigned:
-		return "Resigned"
+	if s, ok := mapGameStatusToString[t]; ok {
+		return s
 	}
 	return "unknown"
 }
@@ -185,25 +215,19 @@ type wordleGame struct {
 	SecretWord    string           `json:"secretWord"`
 	Attempts      []*WordleAttempt `json:"attempts"`
 	ValidAttempts int              `json:"validAttempts"`
+	LastUpdated   time.Time        `json:"lastUpdated"`
 }
-
-// func (g wordleGame) String() string {
-// 	b, err := json.Marshal(g)
-// 	if err != nil {
-// 		return "{}"
-// 	}
-
-// 	return (string(b))
-// }
 
 func (g *wordleGame) addAttempt() *WordleAttempt {
 	wa := new(WordleAttempt)
 
+	wa.TimeStamp = time.Now()
 	wa.TryWord = ""
 	wa.IsValidWord = false
 	wa.TryResult = make([]LetterHint, config.CONFIG_GAME_WORDLENGTH)
 
 	g.Attempts = append(g.Attempts, wa)
+	g.LastUpdated = time.Now()
 
 	return wa
 }

@@ -8,6 +8,7 @@ import (
 	"runtime"
 )
 
+const CONFIG_API_PORT = 8080
 // const CONFIG_DICTIONARY_FILENAME = "google-10000-english-usa-no-swears-medium.txt"
 const CONFIG_DICTIONARY_FILENAME = "corncob_lowercase.txt"
 const CONFIG_DICTIONARY_FILEPATH = "data/" + CONFIG_DICTIONARY_FILENAME

@@ -25,3 +25,7 @@ push: image
 
 clean: dep-clean
 .PHONY:clean
+
+run-container: image
+	docker run --rm --name wordle -p 8080:8080 master-build:${image_ver}
+.PHONY:run-container
