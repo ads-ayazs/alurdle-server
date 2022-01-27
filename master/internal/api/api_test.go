@@ -44,6 +44,7 @@ func TestGetGame(t *testing.T) {
 
 		router.ServeHTTP(w, req)
 		assert.Equal(http.StatusOK, w.Code)
+		assert.Contains(w.Result().Header["Content-Type"], API_RESPONSE_CONTENT_TYPE)
 		assert.NotEmpty(w.Body.Bytes())
 
 		mapResult := map[string]interface{}{}
@@ -115,7 +116,9 @@ func TestGetPlay(t *testing.T) {
 		router.ServeHTTP(w, req)
 		if len(test.errMsg) > 0 {
 			assert.NotEqual(http.StatusOK, w.Code, test.guess)
+			assert.Contains(w.Result().Header["Content-Type"], API_RESPONSE_CONTENT_TYPE)
 		} else if assert.Equal(http.StatusOK, w.Code, fmt.Sprintf("\"%s\": %s", test.guess, w.Body.String())) {
+			assert.Contains(w.Result().Header["Content-Type"], API_RESPONSE_CONTENT_TYPE)
 			assert.NotEmpty(w.Body.Bytes())
 
 			mapResult := map[string]interface{}{}
@@ -147,12 +150,13 @@ func TestGetResign(t *testing.T) {
 	// test Resign
 	w = httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/resign", nil)
-	assert.NoError(err)
+	require.NoError(err)
 	q := req.URL.Query()
 	q.Add("id", gameId)
 	req.URL.RawQuery = q.Encode()
 	router.ServeHTTP(w, req)
 	assert.Equal(http.StatusOK, w.Code)
+	assert.Contains(w.Result().Header["Content-Type"], API_RESPONSE_CONTENT_TYPE)
 	assert.NotEmpty(w.Body.Bytes())
 
 	mapResult = map[string]interface{}{}
@@ -161,5 +165,5 @@ func TestGetResign(t *testing.T) {
 	for _, elem := range testElements {
 		assert.Contains(mapResult, elem)
 	}
-	assert.EqualValues(3, mapResult["gameStatus"])
+	assert.EqualValues("Resigned", mapResult["gameStatus"])
 }
