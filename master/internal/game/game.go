@@ -169,14 +169,14 @@ func (g *wordleGame) Resign() (string, error) {
 	return g.statusReport(), nil
 }
 
-func (t GameStatusType) Marshall() ([]byte, error) {
+func (t GameStatusType) MarshalJSON() ([]byte, error) {
 	buf := bytes.NewBufferString(`"`)
 	buf.WriteString(mapGameStatusToString[t])
 	buf.WriteString(`"`)
 	return buf.Bytes(), nil
 }
 
-func (t *GameStatusType) Unmarshall(b []byte) error {
+func (t *GameStatusType) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err
