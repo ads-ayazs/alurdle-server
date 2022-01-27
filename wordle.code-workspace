@@ -1,13 +1,13 @@
 {
 	"folders": [
 		{
-			"path": "player"
+			"path": "docker-config"
 		},
 		{
 			"path": "master"
 		},
 		{
-			"path": "docker-config"
+			"path": "player"
 		},
 		{
 			"path": "scripts"
