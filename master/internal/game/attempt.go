@@ -1,5 +1,11 @@
 package game
 
+import (
+	"bytes"
+	"encoding/json"
+	"time"
+)
+
 // Enum for letter hints returned after each attempt
 type LetterHint int
 
@@ -15,22 +21,47 @@ type WordleAttempt struct {
 	TryWord     string       `json:"tryWord"`
 	IsValidWord bool         `json:"isValidWord"`
 	TryResult   []LetterHint `json:"tryResult"`
+	TimeStamp   time.Time    `json:timeStamp`
+}
+
+var mapLetterHintToString = map[LetterHint]string{
+	Blank:  "Blank",
+	Green:  "Green",
+	Yellow: "Yellow",
+	Grey:   "Grey",
+	Red:    "Red",
+}
+
+var mapStringToLetterHint = map[string]LetterHint{
+	"Blank":  Blank,
+	"Green":  Green,
+	"Yellow": Yellow,
+	"Grey":   Grey,
+	"Red":    Red,
 }
 
 func (h LetterHint) String() string {
-	switch h {
-	case Blank:
-		return "Blank"
-	case Green:
-		return "Green"
-	case Yellow:
-		return "Yellow"
-	case Grey:
-		return "Grey"
-	case Red:
-		return "Red"
+	if s, ok := mapLetterHintToString[h]; ok {
+		return s
 	}
 	return "unknown"
+}
+
+func (h LetterHint) MarshalJSON() ([]byte, error) {
+	buf := bytes.NewBufferString(`"`)
+	buf.WriteString(mapLetterHintToString[h])
+	buf.WriteString(`"`)
+	return buf.Bytes(), nil
+}
+
+func (h *LetterHint) UnmarshalJSON(b []byte) error {
+	var j string
+	if err := json.Unmarshal(b, &j); err != nil {
+		return err
+	}
+
+	*h = mapStringToLetterHint[j]
+	return nil
 }
 
 func (a WordleAttempt) isWinner() bool {

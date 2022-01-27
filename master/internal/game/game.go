@@ -19,6 +19,7 @@ package game
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"aluance.io/wordle/internal/config"
 	"aluance.io/wordle/internal/dictionary"
@@ -187,18 +188,10 @@ type wordleGame struct {
 	ValidAttempts int              `json:"validAttempts"`
 }
 
-// func (g wordleGame) String() string {
-// 	b, err := json.Marshal(g)
-// 	if err != nil {
-// 		return "{}"
-// 	}
-
-// 	return (string(b))
-// }
-
 func (g *wordleGame) addAttempt() *WordleAttempt {
 	wa := new(WordleAttempt)
 
+	wa.TimeStamp = time.Now()
 	wa.TryWord = ""
 	wa.IsValidWord = false
 	wa.TryResult = make([]LetterHint, config.CONFIG_GAME_WORDLENGTH)
