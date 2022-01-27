@@ -50,7 +50,6 @@ func getGame(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
-	// c.String(http.StatusOK, out)
 }
 
 func getPlay(c *gin.Context) {
@@ -59,7 +58,6 @@ func getPlay(c *gin.Context) {
 
 	if len(gameId) < 1 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
-		// c.String(http.StatusBadRequest, "invalid ID")
 		return
 	}
 	g, err := game.Retrieve(gameId)
@@ -73,7 +71,6 @@ func getPlay(c *gin.Context) {
 		for _, safe := range safeErrors {
 			if err == safe {
 				c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
-				// c.String(http.StatusOK, out)
 				return
 			}
 		}
@@ -83,7 +80,6 @@ func getPlay(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
-	// c.String(http.StatusOK, out)
 }
 
 func getResign(c *gin.Context) {
@@ -104,13 +100,11 @@ func getResign(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
-	// c.String(http.StatusOK, out)
 }
 
 func handleError(c *gin.Context, err error) bool {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		// c.String(http.StatusInternalServerError, fmt.Sprintf("{\"error\": \"%s\"}", err.Error()))
 		return true
 	}
 
