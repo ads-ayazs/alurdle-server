@@ -63,6 +63,7 @@ func Create(secretWord string) (Game, error) {
 	game.SecretWord = sw
 	game.Attempts = []*WordleAttempt{}
 	game.Status = InPlay
+	game.LastUpdated = time.Now()
 
 	s, err := store.WordleStore()
 	if err != nil {
@@ -134,6 +135,8 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 		g.Status = Lost
 	}
 
+	g.LastUpdated = time.Now()
+
 	// Save to game store
 	gs, err := store.WordleStore()
 	if err != nil {
@@ -150,6 +153,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 
 func (g *wordleGame) Resign() (string, error) {
 	g.Status = Resigned
+	g.LastUpdated = time.Now()
 
 	// Save to game store
 	gs, err := store.WordleStore()
@@ -186,6 +190,7 @@ type wordleGame struct {
 	SecretWord    string           `json:"secretWord"`
 	Attempts      []*WordleAttempt `json:"attempts"`
 	ValidAttempts int              `json:"validAttempts"`
+	LastUpdated   time.Time        `json:"lastUpdated"`
 }
 
 func (g *wordleGame) addAttempt() *WordleAttempt {
@@ -197,6 +202,7 @@ func (g *wordleGame) addAttempt() *WordleAttempt {
 	wa.TryResult = make([]LetterHint, config.CONFIG_GAME_WORDLENGTH)
 
 	g.Attempts = append(g.Attempts, wa)
+	g.LastUpdated = time.Now()
 
 	return wa
 }
@@ -224,7 +230,7 @@ func (g wordleGame) statusReport() string {
 	b, err = json.Marshal(s)
 	if err != nil {
 		return "{}"
-	}
+	} 
 
 	return string(b)
 }

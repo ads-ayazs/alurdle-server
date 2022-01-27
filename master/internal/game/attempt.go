@@ -21,7 +21,7 @@ type WordleAttempt struct {
 	TryWord     string       `json:"tryWord"`
 	IsValidWord bool         `json:"isValidWord"`
 	TryResult   []LetterHint `json:"tryResult"`
-	TimeStamp   time.Time    `json:timeStamp`
+	TimeStamp   time.Time    `json:"timeStamp"`
 }
 
 var mapLetterHintToString = map[LetterHint]string{
