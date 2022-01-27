@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "player"
+		},
+		{
+			"path": "master"
+		},
+		{
+			"path": "docker-config"
+		},
+		{
+			"path": "scripts"
+		}
+	],
+	"settings": {}
+}
