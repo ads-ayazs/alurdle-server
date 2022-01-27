@@ -55,12 +55,12 @@ func (h LetterHint) MarshalJSON() ([]byte, error) {
 }
 
 func (h *LetterHint) UnmarshalJSON(b []byte) error {
-	var j string
-	if err := json.Unmarshal(b, &j); err != nil {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
 		return err
 	}
 
-	*h = mapStringToLetterHint[j]
+	*h = mapStringToLetterHint[s]
 	return nil
 }
 

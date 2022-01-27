@@ -17,6 +17,7 @@ Key functions:
 package game
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
 	"time"
@@ -168,18 +169,42 @@ func (g *wordleGame) Resign() (string, error) {
 	return g.statusReport(), nil
 }
 
+func (t GameStatusType) Marshall() ([]byte, error) {
+	buf := bytes.NewBufferString(`"`)
+	buf.WriteString(mapGameStatusToString[t])
+	buf.WriteString(`"`)
+	return buf.Bytes(), nil
+}
+
+func (t *GameStatusType) Unmarshall(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	*t = mapStringToGameStatus[s]
+	return nil
+}
+
 /////////////
 
+var mapGameStatusToString = map[GameStatusType]string{
+	InPlay:   "InPlay",
+	Won:      "Won",
+	Lost:     "Lost",
+	Resigned: "Resigned",
+}
+
+var mapStringToGameStatus = map[string]GameStatusType{
+	"InPlay":   InPlay,
+	"Won":      Won,
+	"Lost":     Lost,
+	"Resigned": Resigned,
+}
+
 func (t GameStatusType) String() string {
-	switch t {
-	case InPlay:
-		return "InPlay"
-	case Won:
-		return "Won"
-	case Lost:
-		return "Lost"
-	case Resigned:
-		return "Resigned"
+	if s, ok := mapGameStatusToString[t]; ok {
+		return s
 	}
 	return "unknown"
 }
@@ -230,7 +255,7 @@ func (g wordleGame) statusReport() string {
 	b, err = json.Marshal(s)
 	if err != nil {
 		return "{}"
-	} 
+	}
 
 	return string(b)
 }
