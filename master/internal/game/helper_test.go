@@ -22,7 +22,7 @@ func TestValidateWords(t *testing.T) {
 		{s: "kNoll", secret: "knoll", result: "KNOLL", err: nil},
 		{s: "blank", result: "BLANK", err: nil},
 		{s: "blANk", result: "BLANK", err: nil},
-		{s: "anime", result: "ANIME", err: nil},
+		{s: "sleep", result: "SLEEP", err: nil},
 	}
 
 	for _, test := range tests {
@@ -39,7 +39,7 @@ func TestValidateWords(t *testing.T) {
 			assert.Equal(test.result, res, "should return original string")
 			continue // This test returned a valid error so move to the next test
 		}
-		assert.NoError(err)
+		assert.NoError(err, test.s)
 
 		assert.Equal(test.result, res, "return is not as expected")
 	}
