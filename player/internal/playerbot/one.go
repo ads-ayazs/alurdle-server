@@ -9,12 +9,14 @@ import (
 const ONEBOT_NAME = "one"
 
 type oneBot struct {
-	id   string
-	game oneGame
+	id         string
+	game       oneGame
+	dictionary PlayerDictionary
 }
 
 func createOne() (Playerbot, error) {
 	bot := new(oneBot)
+	bot.dictionary = CreateDictionary()
 
 	bot.id = xid.New().String()
 
@@ -86,7 +88,10 @@ func (bot *oneBot) playTurn() error {
 	ge := GetGameEngine()
 
 	// Generate a word
-	guessWord := "XXXXX"
+	guessWord, err := bot.dictionary.Generate()
+	if err != nil {
+		return err
+	}
 
 	// Play the guess word
 	out, err := ge.PlayTurn(bot.game.gameId, guessWord)
@@ -113,6 +118,11 @@ func (bot *oneBot) playTurn() error {
 	turn.guess = guessWord
 	turn.isValid = lastAttempt["isValidWord"] == "true"
 	bot.game.turns = append(bot.game.turns, *turn)
+
+	// Update the dictionary
+	if err := bot.dictionary.Remember(turn.guess, turn.isValid); err != nil {
+		return err
+	}
 
 	// Save essential information
 	bot.game.gameStatus = outmap["gameStatus"].(string)
