@@ -11,8 +11,19 @@ import (
 func TestCreateDictionary(t *testing.T) {
 	assert := assert.New(t)
 
-	d := CreateDictionary()
+	startSize := len(dictionaries)
+
+	dummyBotId := "a1b2c3d4e5_TestCreateDictionary"
+	d := CreateDictionary(dummyBotId)
 	assert.Implements((*PlayerDictionary)(nil), d)
+	assert.Equal(startSize+1, len(dictionaries))
+
+	dummyWord := "ABCDE"
+	d.Remember(dummyWord, true)
+
+	d2 := CreateDictionary(dummyBotId)
+	assert.Equal(startSize+1, len(dictionaries))
+	assert.True(d2.IsValid(dummyWord))
 }
 
 func TestRemember(t *testing.T) {
@@ -28,7 +39,8 @@ func TestRemember(t *testing.T) {
 		{word: "WHALE", valid: true, err: nil},
 	}
 
-	d := CreateDictionary()
+	dummyBotId := "a1b2c3d4e5_TestRemember"
+	d := CreateDictionary(dummyBotId)
 
 	for _, test := range tests {
 		err := d.Remember(test.word, test.valid)
@@ -46,7 +58,8 @@ func TestRemember(t *testing.T) {
 func TestGenerate(t *testing.T) {
 	assert := assert.New(t)
 
-	d := CreateDictionary()
+	dummyBotId := "a1b2c3d4e5_TestGenerate"
+	d := CreateDictionary(dummyBotId)
 
 	w, err := d.Generate()
 	assert.NoError(err)
@@ -70,7 +83,8 @@ func TestIsValid(t *testing.T) {
 		{word: "WHALE", valid: true},
 	}
 
-	d := CreateDictionary()
+	dummyBotId := "a1b2c3d4e5_TestIsValid"
+	d := CreateDictionary(dummyBotId)
 
 	// Add words to dictionary
 	for _, test := range tests {
