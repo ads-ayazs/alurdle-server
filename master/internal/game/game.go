@@ -114,7 +114,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	attempt.TryWord = tw
 	if err != nil {
 		attempt.IsValidWord = false
-		
+
 		if len(g.Attempts) >= config.CONFIG_GAME_MAXATTEMPTS ||
 			g.ValidAttempts >= config.CONFIG_GAME_MAXVALIDATTEMPTS {
 			g.Status = Lost
