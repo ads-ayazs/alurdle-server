@@ -77,7 +77,6 @@ func Initialize(filename string) error {
 	return nil
 }
 
-
 type dict struct {
 	init_once  resync.Once
 	initalized bool
