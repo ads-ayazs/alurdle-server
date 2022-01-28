@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"aluance.io/wordle/internal/config"
-	"aluance.io/wordle/internal/game"
+	"aluance.io/wordleserver/internal/config"
+	"aluance.io/wordleserver/internal/game"
 	"github.com/gin-gonic/gin"
 )
 
