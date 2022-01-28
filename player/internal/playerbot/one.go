@@ -3,7 +3,9 @@ package playerbot
 import (
 	"encoding/json"
 
+	"aluance.io/wordleplayer/internal/config"
 	"github.com/rs/xid"
+	log "github.com/sirupsen/logrus"
 )
 
 const ONEBOT_NAME = "one"
@@ -16,9 +18,13 @@ type oneBot struct {
 
 func createOne() (Playerbot, error) {
 	bot := new(oneBot)
-	bot.dictionary = CreateDictionary()
-
 	bot.id = xid.New().String()
+	log.Info("botId: ", bot.id)
+
+	bot.dictionary = CreateDictionary(bot.id)
+	if bot.dictionary == nil {
+		return nil, ErrNilDictionary
+	}
 
 	return bot, nil
 }
@@ -48,14 +54,25 @@ func (b oneBot) PlayGame(ch *chan string) {
 }
 
 type oneGame struct {
-	gameId     string
-	gameStatus string
-	turns      []oneTurn
+	gameId         string
+	gameStatus     string
+	turns          []oneTurn
+	winWord        string
+	validAttempts  int
+	winningAttempt int
 }
 
 type oneTurn struct {
-	guess   string
-	isValid bool
+	guess     string
+	isValid   bool
+	tryResult []string
+}
+
+func createOneTurn() *oneTurn {
+	turn := new(oneTurn)
+	turn.tryResult = make([]string, config.CONFIG_GAME_WORDLENGTH)
+
+	return turn
 }
 
 func (bot *oneBot) startGame() error {
@@ -88,6 +105,9 @@ func (bot *oneBot) playTurn() error {
 	ge := GetGameEngine()
 
 	// Generate a word
+	if bot.dictionary == nil {
+		return ErrNilDictionary
+	}
 	guessWord, err := bot.dictionary.Generate()
 	if err != nil {
 		return err
@@ -114,9 +134,15 @@ func (bot *oneBot) playTurn() error {
 	}
 
 	// Create and save a turn record
-	turn := new(oneTurn)
+	turn := createOneTurn()
 	turn.guess = guessWord
-	turn.isValid = lastAttempt["isValidWord"] == "true"
+	turn.isValid = lastAttempt["isValidWord"].(bool)
+
+	tr := lastAttempt["tryResult"].([]interface{})
+	for i := 0; i < len(tr); i++ {
+		turn.tryResult[i] = tr[i].(string)
+	}
+
 	bot.game.turns = append(bot.game.turns, *turn)
 
 	// Update the dictionary
@@ -126,10 +152,26 @@ func (bot *oneBot) playTurn() error {
 
 	// Save essential information
 	bot.game.gameStatus = outmap["gameStatus"].(string)
+	bot.game.validAttempts = int(outmap["validAttempts"].(float64))
+	if bot.game.gameStatus == "Won" {
+		bot.game.winWord = outmap["secretWord"].(string)
+		bot.game.winningAttempt = outmap["winningAttempt"].(int)
+	} else if bot.game.gameStatus == "Lost" {
+		bot.game.winWord = outmap["secretWord"].(string)
+
+		// Update the dictionary
+		if err := bot.dictionary.Remember(bot.game.winWord, true); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
 
 func (bot oneBot) finishGame() string {
+
+	log.Info("BOT FINISHED - ", "botId: ", bot.id, " gameId: ", bot.game.gameId)
+	log.Info("    botId: ", bot.id, " dictionary valid/size: ", bot.dictionary.DescribeSize(true), "/", bot.dictionary.DescribeSize(false))
+	log.Info("    botId: ", bot.id, " outcome: ", bot.game.gameStatus)
 	return bot.game.gameId
 }
