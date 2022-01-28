@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"aluance.io/wordle/internal/config"
+	"aluance.io/wordleserver/internal/config"
 	"github.com/matryer/resync"
 )
 

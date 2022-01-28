@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"aluance.io/wordle/internal/config"
-	"aluance.io/wordle/internal/dictionary"
-	"aluance.io/wordle/internal/store"
+	"aluance.io/wordleserver/internal/config"
+	"aluance.io/wordleserver/internal/dictionary"
+	"aluance.io/wordleserver/internal/store"
 	"github.com/rs/xid"
 )
 
