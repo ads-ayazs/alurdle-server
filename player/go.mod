@@ -4,8 +4,11 @@ go 1.17
 
 require github.com/stretchr/testify v1.7.0
 
+require github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/xid v1.3.0
 	github.com/sirupsen/logrus v1.8.1
