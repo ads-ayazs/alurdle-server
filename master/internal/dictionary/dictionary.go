@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"math/rand"
 	"strings"
+	"sync"
 	"time"
 
 	"aluance.io/wordleserver/internal/config"
@@ -37,6 +38,9 @@ func IsWordValid(w string) bool {
 }
 
 func Initialize(filename string) error {
+
+	wordleDict.mu.Lock()
+	defer wordleDict.mu.Unlock()
 
 	// Only initialized dictionary once
 	if wordleDict.initalized {
@@ -80,6 +84,7 @@ func Initialize(filename string) error {
 type dict struct {
 	init_once  resync.Once
 	initalized bool
+	mu         sync.Mutex
 	words      []string
 	wordMap    map[string]bool
 }
@@ -89,6 +94,9 @@ func (d *dict) size() int {
 }
 
 func (d *dict) reset() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	
 	d.words = []string{}
 	d.wordMap = make(map[string]bool)
 	d.init_once.Reset()
