@@ -7,11 +7,20 @@
 			"path": "master"
 		},
 		{
-			"path": "player"
-		},
-		{
 			"path": "scripts"
 		}
 	],
-	"settings": {}
+	"settings": {},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Launch Package",
+				"type": "go",
+				"request": "launch",
+				"mode": "auto",
+				"program": "${fileDirname}"
+			}
+		]
+	}
 }

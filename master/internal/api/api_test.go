@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"aluance.io/wordle/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,6 +78,30 @@ func TestGetPlay(t *testing.T) {
 		{id: "<ID>", guess: "smile"},
 		{id: "<ID>", guess: "poems"},
 		{id: "<ID>", guess: "imply"},
+		{id: "<ID>", guess: "sugar"},
+		{id: "<ID>", guess: "whack"},
+		{id: "<ID>", guess: "blink"},
+		{id: "<ID>", guess: "games"},
+		{id: "<ID>", guess: "scent"},
+	}
+	tests2 := []struct {
+		id     string
+		guess  string
+		errMsg string
+	}{
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "xxxxx"},
+		{id: "<ID>", guess: "douze"},
+		{id: "<ID>", guess: "xxxxx"},
 	}
 	startWord := "poems"
 
@@ -123,6 +148,59 @@ func TestGetPlay(t *testing.T) {
 
 			mapResult := map[string]interface{}{}
 			assert.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult), test.guess)
+
+			attemptsUsed := int(mapResult["attemptsUsed"].(float64))
+			gameStatus := mapResult["gameStatus"].(string)
+			if attemptsUsed == config.CONFIG_GAME_MAXATTEMPTS {
+				assert.NotEqual("InPlay", gameStatus)
+			}
+		}
+	}
+
+	// Create another game
+	w = httptest.NewRecorder()
+	req, err = http.NewRequest("GET", "/game", nil)
+	require.NoError(err)
+	q = req.URL.Query()
+	q.Add("word", startWord)
+	req.URL.RawQuery = q.Encode()
+
+	router.ServeHTTP(w, req)
+	require.Equal(http.StatusOK, w.Code)
+	require.NotEmpty(w.Body.Bytes())
+
+	mapResult = map[string]interface{}{}
+	require.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult))
+	gameId = mapResult["id"].(string)
+	require.NotEmpty(gameId)
+
+	// Test plays
+	for _, test := range tests2 {
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", "/play", nil)
+		assert.NoError(err)
+
+		q := req.URL.Query()
+		q.Add("id", strings.Replace(test.id, "<ID>", gameId, 1))
+		q.Add("guess", test.guess)
+		req.URL.RawQuery = q.Encode()
+
+		router.ServeHTTP(w, req)
+		if len(test.errMsg) > 0 {
+			assert.NotEqual(http.StatusOK, w.Code, test.guess)
+			assert.Contains(w.Result().Header["Content-Type"], API_RESPONSE_CONTENT_TYPE)
+		} else if assert.Equal(http.StatusOK, w.Code, fmt.Sprintf("\"%s\": %s", test.guess, w.Body.String())) {
+			assert.Contains(w.Result().Header["Content-Type"], API_RESPONSE_CONTENT_TYPE)
+			assert.NotEmpty(w.Body.Bytes())
+
+			mapResult := map[string]interface{}{}
+			assert.NoError(json.Unmarshal(w.Body.Bytes(), &mapResult), test.guess)
+
+			attemptsUsed := int(mapResult["attemptsUsed"].(float64))
+			gameStatus := mapResult["gameStatus"].(string)
+			if attemptsUsed == config.CONFIG_GAME_MAXATTEMPTS {
+				assert.NotEqual("InPlay", gameStatus)
+			}
 		}
 	}
 }
