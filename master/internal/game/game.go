@@ -95,7 +95,7 @@ func Retrieve(id string) (Game, error) {
 	return game, nil
 }
 
-func (g wordleGame) Describe() (string, error) {
+func (g *wordleGame) Describe() (string, error) {
 	return g.statusReport(), nil
 }
 
