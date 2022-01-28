@@ -16,6 +16,9 @@ func GenerateWord() (string, error) {
 		return "", err
 	}
 
+	wordleDict.mu.RLock()
+	defer wordleDict.mu.RUnlock()
+
 	word := "blank"
 	if max := wordleDict.size(); max > 0 {
 		index := rand.Intn(max)
@@ -30,6 +33,9 @@ func IsWordValid(w string) bool {
 		return false
 	}
 
+	wordleDict.mu.RLock()
+	defer wordleDict.mu.RUnlock()
+	
 	if member, ok := wordleDict.wordMap[strings.ToLower(w)]; ok {
 		return member
 	}
@@ -84,7 +90,7 @@ func Initialize(filename string) error {
 type dict struct {
 	init_once  resync.Once
 	initalized bool
-	mu         sync.Mutex
+	mu         sync.RWMutex
 	words      []string
 	wordMap    map[string]bool
 }
@@ -96,7 +102,7 @@ func (d *dict) size() int {
 func (d *dict) reset() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	d.words = []string{}
 	d.wordMap = make(map[string]bool)
 	d.init_once.Reset()
