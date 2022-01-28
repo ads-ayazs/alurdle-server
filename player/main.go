@@ -2,35 +2,47 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"aluance.io/wordleplayer/internal/config"
+	"aluance.io/wordleplayer/internal/playerbot"
 )
 
 func main() {
-	out, err := startGame()
-	if err != nil {
-		log.Fatal(err)
+	numGames := 15000
+	numBots := 5
+	ch := make(chan string)
+
+	bots := make([]playerbot.Playerbot, numBots)
+	for i := 0; i < numBots; i++ {
+		b, err := playerbot.CreateBot(playerbot.ONEBOT_NAME)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bots[i] = b
 	}
 
-	fmt.Print(out)
+	count := 0
+	for i := 0; i < numGames; i++ {
+		go bots[i%numBots].PlayGame(&ch)
+		count++
+		time.Sleep(config.CONFIG_BOT_THROTTLE * time.Millisecond)
+	}
+	fmt.Println("Games launched:", count)
+
+	for i := count; i > 0; i-- {
+		select {
+		case s := <-ch:
+			fmt.Println(s)
+		case <-time.After(60 * time.Second):
+			log.Fatal("Timed out before bot finished playing.")
+		}
+	}
+	close(ch)
 }
 
-func startGame() (string, error) {
-	resp, err := http.Get(config.CONFIG_SERVER_URL + "/game")
-	if err != nil {
-		log.Error(err)
-		return "", err
-	}
+func initLogger() {
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error(err)
-		return "", err
-	}
-
-	return string(body), nil
 }
