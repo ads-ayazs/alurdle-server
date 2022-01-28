@@ -17,12 +17,14 @@ Key functions:
 package game
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
+	"time"
 
-	"aluance.io/wordle/internal/config"
-	"aluance.io/wordle/internal/dictionary"
-	"aluance.io/wordle/internal/store"
+	"aluance.io/wordleserver/internal/config"
+	"aluance.io/wordleserver/internal/dictionary"
+	"aluance.io/wordleserver/internal/store"
 	"github.com/rs/xid"
 )
 
@@ -62,6 +64,7 @@ func Create(secretWord string) (Game, error) {
 	game.SecretWord = sw
 	game.Attempts = []*WordleAttempt{}
 	game.Status = InPlay
+	game.LastUpdated = time.Now()
 
 	s, err := store.WordleStore()
 	if err != nil {
@@ -111,6 +114,11 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	attempt.TryWord = tw
 	if err != nil {
 		attempt.IsValidWord = false
+
+		if len(g.Attempts) >= config.CONFIG_GAME_MAXATTEMPTS ||
+			g.ValidAttempts >= config.CONFIG_GAME_MAXVALIDATTEMPTS {
+			g.Status = Lost
+		}
 		if err == ErrWordLength {
 			return g.statusReport(), err
 		}
@@ -133,6 +141,8 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 		g.Status = Lost
 	}
 
+	g.LastUpdated = time.Now()
+
 	// Save to game store
 	gs, err := store.WordleStore()
 	if err != nil {
@@ -149,6 +159,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 
 func (g *wordleGame) Resign() (string, error) {
 	g.Status = Resigned
+	g.LastUpdated = time.Now()
 
 	// Save to game store
 	gs, err := store.WordleStore()
@@ -163,18 +174,42 @@ func (g *wordleGame) Resign() (string, error) {
 	return g.statusReport(), nil
 }
 
+func (t GameStatusType) MarshalJSON() ([]byte, error) {
+	buf := bytes.NewBufferString(`"`)
+	buf.WriteString(mapGameStatusToString[t])
+	buf.WriteString(`"`)
+	return buf.Bytes(), nil
+}
+
+func (t *GameStatusType) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	*t = mapStringToGameStatus[s]
+	return nil
+}
+
 /////////////
 
+var mapGameStatusToString = map[GameStatusType]string{
+	InPlay:   "InPlay",
+	Won:      "Won",
+	Lost:     "Lost",
+	Resigned: "Resigned",
+}
+
+var mapStringToGameStatus = map[string]GameStatusType{
+	"InPlay":   InPlay,
+	"Won":      Won,
+	"Lost":     Lost,
+	"Resigned": Resigned,
+}
+
 func (t GameStatusType) String() string {
-	switch t {
-	case InPlay:
-		return "InPlay"
-	case Won:
-		return "Won"
-	case Lost:
-		return "Lost"
-	case Resigned:
-		return "Resigned"
+	if s, ok := mapGameStatusToString[t]; ok {
+		return s
 	}
 	return "unknown"
 }
@@ -185,25 +220,19 @@ type wordleGame struct {
 	SecretWord    string           `json:"secretWord"`
 	Attempts      []*WordleAttempt `json:"attempts"`
 	ValidAttempts int              `json:"validAttempts"`
+	LastUpdated   time.Time        `json:"lastUpdated"`
 }
-
-// func (g wordleGame) String() string {
-// 	b, err := json.Marshal(g)
-// 	if err != nil {
-// 		return "{}"
-// 	}
-
-// 	return (string(b))
-// }
 
 func (g *wordleGame) addAttempt() *WordleAttempt {
 	wa := new(WordleAttempt)
 
+	wa.TimeStamp = time.Now()
 	wa.TryWord = ""
 	wa.IsValidWord = false
 	wa.TryResult = make([]LetterHint, config.CONFIG_GAME_WORDLENGTH)
 
 	g.Attempts = append(g.Attempts, wa)
+	g.LastUpdated = time.Now()
 
 	return wa
 }
@@ -257,15 +286,15 @@ func (g wordleGame) scoreWord(tryWord string, result *[]LetterHint) error {
 		} else if count := strings.Count(g.SecretWord, string(tryWord[i])); count > 0 {
 			// Letter is definitely in the secret word. Check if there are other instances of the
 			// same letter that are or will be marked green or yellow elsewhere in the word.
-			if countLeft := strings.Count(g.SecretWord[0:i], string(tryWord[i])); countLeft > 0 {
+			if countLeft := strings.Count(g.SecretWord[:i+1], string(tryWord[i])); countLeft > 0 {
 				// If letter occured fewer times in tryWord than secret, mark is yellow
-				if strings.Count(tryWord[0:i], string(tryWord[i])) <= countLeft {
+				if strings.Count(tryWord[:i+1], string(tryWord[i])) <= countLeft {
 					score[i] = Yellow
 					continue
 				}
 			}
-			if countRight := strings.Count(g.SecretWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])); countRight > 0 {
-				if strings.Count(tryWord[i:config.CONFIG_GAME_WORDLENGTH], string(tryWord[i])) <= countRight {
+			if countRight := strings.Count(g.SecretWord[i:], string(tryWord[i])); countRight > 0 {
+				if strings.Count(tryWord[i:], string(tryWord[i])) <= countRight {
 					score[i] = Yellow
 					continue
 				}

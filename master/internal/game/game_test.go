@@ -86,10 +86,10 @@ func TestPlay(t *testing.T) {
 		err         error
 	}{
 		{createWord: "happy", tryWord: "", err: ErrWordLength},
-		{createWord: "happy", tryWord: "zzzzz", gameMap: map[string]interface{}{"attemptsUsed": 0, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": false, "tryWord": "ZZZZZ"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: ErrInvalidWord},
-		{createWord: "happy", tryWord: "happy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 1, "secretWord": "HAPPY", "winningAttempt": 1}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "HAPPY"}, tryResult: []LetterHint{1, 1, 1, 1, 1}, err: nil},
-		{createWord: "happy", tryWord: "puppy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "PUPPY"}, tryResult: []LetterHint{3, 3, 1, 1, 1}, err: nil},
-		{createWord: "happy", tryWord: "bless", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": 0}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "BLESS"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: nil},
+		{createWord: "happy", tryWord: "zzzzz", gameMap: map[string]interface{}{"attemptsUsed": 0, "gameStatus": "InPlay"}, lastAttempt: map[string]interface{}{"isValidWord": false, "tryWord": "ZZZZZ"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: ErrInvalidWord},
+		{createWord: "happy", tryWord: "happy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": "Won", "secretWord": "HAPPY", "winningAttempt": 1}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "HAPPY"}, tryResult: []LetterHint{1, 1, 1, 1, 1}, err: nil},
+		{createWord: "happy", tryWord: "puppy", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": "InPlay"}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "PUPPY"}, tryResult: []LetterHint{3, 3, 1, 1, 1}, err: nil},
+		{createWord: "happy", tryWord: "bless", gameMap: map[string]interface{}{"attemptsUsed": 1, "gameStatus": "InPlay"}, lastAttempt: map[string]interface{}{"isValidWord": true, "tryWord": "BLESS"}, tryResult: []LetterHint{3, 3, 3, 3, 3}, err: nil},
 	}
 
 	for _, test := range tests {
@@ -140,7 +140,7 @@ func TestResign(t *testing.T) {
 		result     map[string]interface{}
 		err        error
 	}{
-		{createWord: "bless", result: map[string]interface{}{"gameStatus": 3}, err: nil},
+		{createWord: "bless", result: map[string]interface{}{"gameStatus": "Resigned"}, err: nil},
 	}
 
 	for _, test := range tests {
@@ -250,6 +250,7 @@ func TestScoreWord(t *testing.T) {
 		{createWord: "happy", tryWord: "happy", result: []LetterHint{Green, Green, Green, Green, Green}, err: nil},
 		{createWord: "knoll", tryWord: "wooly", result: []LetterHint{Grey, Grey, Green, Green, Grey}, err: nil},
 		{createWord: "paths", tryWord: "saved", result: []LetterHint{Yellow, Green, Grey, Grey, Grey}, err: nil},
+		{createWord: "ankle", tryWord: "abate", result: []LetterHint{Green, Grey, Grey, Grey, Green}, err: nil},
 	}
 
 	for _, test := range tests {

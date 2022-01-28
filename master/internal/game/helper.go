@@ -3,8 +3,8 @@ package game
 import (
 	"strings"
 
-	"aluance.io/wordle/internal/config"
-	"aluance.io/wordle/internal/dictionary"
+	"aluance.io/wordleserver/internal/config"
+	"aluance.io/wordleserver/internal/dictionary"
 )
 
 func validateWord(s string, options ...interface{}) (string, error) {

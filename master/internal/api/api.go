@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"aluance.io/wordle/internal/game"
+	"aluance.io/wordleserver/internal/config"
+	"aluance.io/wordleserver/internal/game"
 	"github.com/gin-gonic/gin"
 )
+
+const API_RESPONSE_CONTENT_TYPE = "application/json; charset=utf-8"
 
 func Initialize() {
 	setupRouter()
@@ -21,7 +24,7 @@ func setupRouter() *gin.Engine {
 	router.GET("/play", getPlay)
 	router.GET("/resign", getResign)
 
-	router.Run(":8080")
+	router.Run(fmt.Sprintf(":%d", config.CONFIG_API_PORT))
 
 	return router
 }
@@ -46,7 +49,7 @@ func getGame(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusOK, out)
+	c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
 }
 
 func getPlay(c *gin.Context) {
@@ -54,7 +57,7 @@ func getPlay(c *gin.Context) {
 	guessWord := c.Query("guess")
 
 	if len(gameId) < 1 {
-		c.String(http.StatusBadRequest, "invalid ID")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 		return
 	}
 	g, err := game.Retrieve(gameId)
@@ -67,7 +70,7 @@ func getPlay(c *gin.Context) {
 		safeErrors := []error{game.ErrGameOver, game.ErrInvalidWord, game.ErrOutOfTurns}
 		for _, safe := range safeErrors {
 			if err == safe {
-				c.String(http.StatusOK, out)
+				c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
 				return
 			}
 		}
@@ -76,7 +79,7 @@ func getPlay(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusOK, out)
+	c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
 }
 
 func getResign(c *gin.Context) {
@@ -96,12 +99,12 @@ func getResign(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusOK, out)
+	c.Data(http.StatusOK, API_RESPONSE_CONTENT_TYPE, []byte(out))
 }
 
 func handleError(c *gin.Context, err error) bool {
 	if err != nil {
-		c.String(http.StatusInternalServerError, fmt.Sprintf("{\"error\": \"%s\"}", err.Error()))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return true
 	}
 
