@@ -103,7 +103,7 @@ func (s *wordleStore) PurgeAll() error {
 	defer s.mu.Unlock()
 
 	// Delete all the objects
-	for k, _ := range s.games {
+	for k := range s.games {
 		delete(s.games, k)
 	}
 
