@@ -8,7 +8,8 @@ reg_name ?=
 image_options ?=
 
 # local vars
-outfile ?= _out/wordle-master
+out_fld ?= _out
+outfile ?= ${out_fld}/wordleserver
 
 clean: containers-clean local-clean
 .PHONY:clean
@@ -66,6 +67,7 @@ local-build: local-vet
 .PHONY:local-build
 
 local-clean:
+	rm -rf "${out_fld}"
 	@-go clean -cache -i -r
 .PHONY:local-clean
 
