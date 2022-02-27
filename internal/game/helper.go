@@ -7,11 +7,11 @@ import (
 	"aluance.io/wordleserver/internal/dictionary"
 )
 
-// validateWord determines if a word is valid for a game and returns the 
+// validateWord determines if a word is valid for a game and returns the
 // checked word and an error value if it is not valid.
 //
 // This is a variadic function that optionally accepts the secret word as the
-// second argument. If the try word matches the secret word then it is not 
+// second argument. If the try word matches the secret word then it is not
 // checked againstthe dictionary.
 func validateWord(s string, options ...interface{}) (string, error) {
 	// Retrieve the optional secret word if it was passed

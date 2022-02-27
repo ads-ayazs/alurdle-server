@@ -16,3 +16,6 @@
 
 # .env file
 .env
+
+# Binary outputs folder
+_out

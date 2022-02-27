@@ -1,27 +1,29 @@
 #
 
 ARG USERNAME=nonroot
+ARG APP_FLD=./app
 
 ##
 ## Build stage
 ##
 FROM golang:1.17-bullseye as build
 
+ARG APP_FLD
+
 WORKDIR /app
 
 # Download the required go modules
-COPY ./app/go.mod ./
-COPY ./app/go.sum ./
-COPY ./app/Makefile ./
-# RUN go mod download
-RUN make dep
+RUN echo COPY "${APP_FLD}/go.mod" .
+COPY "${APP_FLD}/go.mod" .
+COPY "${APP_FLD}/go.sum" .
+COPY "${APP_FLD}/Makefile" .
+RUN make local-dep
 
 # Copy source files to the image
-COPY ./app ./
+COPY "${APP_FLD}" .
 
 # Build the binary with static linking
-# RUN CGO_ENABLED=0 go build -o /wordle-master
-RUN CGO_ENABLED=0 make outfile=/wordle-master deploy
+RUN CGO_ENABLED=0 make outfile=/wordleserver local-deploy
 
 
 
@@ -35,10 +37,10 @@ RUN adduser -D -H ${USERNAME}
 
 # Copy output binary from build image
 WORKDIR /
-COPY --from=build /wordle-master /
+COPY --from=build /wordleserver /
 
 # Expose port and run as non-privileged user
 EXPOSE 8080
 
 USER ${USERNAME}:${USERNAME}
-ENTRYPOINT [ "/wordle-master" ]
+ENTRYPOINT [ "/wordleserver" ]

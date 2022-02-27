@@ -10,7 +10,7 @@ project_home=$(f)
 
 # Directory locations
 docker_folder="$project_home/build"
-src_folder="$project_home/"
+src_folder="$project_home"
 
 # Docker base images
 # docker_images=("node:14.16-alpine" "elasticsearch:7.13.4" "kibana:7.13.4" "logstash:7.13.4")
@@ -21,7 +21,7 @@ opt_clean_only=${1:-false}
 base_folder="master"
 app_folder="app"
 
-from_dir="$src_folder/$base_folder"
+from_dir="$src_folder"
 to_dir="$docker_folder/$base_folder"
 
 if [ -d "$to_dir/$app_folder" ] 
@@ -35,7 +35,10 @@ if [ "$opt_clean_only" = "clean" ]; then
 fi
 
 mkdir -p "$to_dir/$app_folder"
-cp -r "$from_dir/" "$to_dir/$app_folder"
+src_files=(cmd go.mod go.sum internal Makefile)
+for f in ${src_files[@]}; do
+  cp -r "$from_dir/$f" "$to_dir/$app_folder"
+done
 
 
 

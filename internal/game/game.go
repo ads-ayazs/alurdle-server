@@ -5,9 +5,9 @@ This package functionality is intended to be exposed through a RESTful API. The
 primary interface is Game.
 
 Key functions:
-	Create(secretWord) - Returns a new game, where secretWord is the five-letter 
+	Create(secretWord) - Returns a new game, where secretWord is the five-letter
 	word to be guessed.
-	Retrieve(id string) - Loads and returns the game that matches the provided 
+	Retrieve(id string) - Loads and returns the game that matches the provided
 	game ID.
 */
 package game
@@ -26,6 +26,7 @@ import (
 
 // GameStatusEnum describes the states of a game at any time.
 type GameStatusType int64
+
 const (
 	InPlay GameStatusType = iota
 	Won
@@ -49,9 +50,9 @@ type Game interface {
 // Create is the factory function that returns a Game instance that is ready
 // to play.
 //
-// You can either pass it the desired secret word as a parameter or pass an 
-// empty string to have it generate a secret word. If the secret word is 
-// invalid (due to length for example) or if the function fails to generate 
+// You can either pass it the desired secret word as a parameter or pass an
+// empty string to have it generate a secret word. If the secret word is
+// invalid (due to length for example) or if the function fails to generate
 // a word, it will return an error.
 func Create(secretWord string) (Game, error) {
 	// Generate a secret word if none was passed in
@@ -120,7 +121,7 @@ func (g *wordleGame) Describe() (string, error) {
 
 // Play attempts a guess by passing in a five-letter word and returns hints for
 // each letter in the guess within the JSON game status string.
-// 
+//
 // Returns an error if the guessed word is not five letters in length, or if the
 // game is over or has exceeded the maximum number of guess attempts.
 func (g *wordleGame) Play(tryWord string) (string, error) {
@@ -188,7 +189,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 //
 // Returns the updated game status as JSON after resigning or an error if the
 // resign attempt was unsuccessful (for example, if the game was already lost).
-// An error can also be generated when the game resigns successfully but the 
+// An error can also be generated when the game resigns successfully but the
 // WordleStore fails to update.
 func (g *wordleGame) Resign() (string, error) {
 	// TODO: Verify that the game is InPlay or return error
