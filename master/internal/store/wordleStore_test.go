@@ -12,10 +12,10 @@ func TestWordleStore(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		result wordleStore
+		result *wordleStore
 		err    error
 	}{
-		{result: wordleStore{games: map[string]interface{}{}}, err: nil},
+		{result: &wordleStore{games: map[string]interface{}{}}, err: nil},
 	}
 
 	for _, test := range tests {
