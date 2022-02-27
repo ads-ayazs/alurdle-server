@@ -112,14 +112,17 @@ func (s *wordleStore) PurgeAll() error {
 
 /////////////////
 
+// wordleStore struct wraps the mutex and map used for in-memory persistence.
 type wordleStore struct {
 	mu    sync.RWMutex
 	games map[string]interface{}
 }
 
+// singleStore points at a singleton instance
 var singleStore *wordleStore
 var once resync.Once // using resync.Once to facilitate testing
 
+// getWordleStore is the singleton constructor for the wordleStore.
 func getWordleStore() *wordleStore {
 	if singleStore == nil {
 		once.Do(
@@ -136,13 +139,15 @@ func getWordleStore() *wordleStore {
 	return singleStore
 }
 
-// Created to facilitate testing
+// resetWordleStore facilitates testing.
 func resetWordleStore() {
 	singleStore = nil
 	once.Reset()
 }
 
+// validateId returns an error if the ID string is not valid
 func validateId(id string) error {
+	// Check that the string is not empty
 	if len(id) < 1 {
 		return ErrInvalidId
 	}
