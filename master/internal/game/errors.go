@@ -2,6 +2,7 @@ package game
 
 import "errors"
 
+// Error codes returned by functions implemented in this package
 var (
 	ErrSerialization = errors.New("game serialization error")
 	ErrGameOver      = errors.New("game is finished")

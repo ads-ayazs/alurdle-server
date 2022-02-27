@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Enum for letter hints returned after each attempt
+// LetterHint enum for letter hints returned after each attempt.
 type LetterHint int
 
 const (
@@ -17,6 +17,7 @@ const (
 	Red                      // invalid word
 )
 
+// WordleAttempt holds the state of an attempt (guess) and its result.
 type WordleAttempt struct {
 	TryWord     string       `json:"tryWord"`
 	IsValidWord bool         `json:"isValidWord"`
@@ -40,6 +41,7 @@ var mapStringToLetterHint = map[string]LetterHint{
 	"Red":    Red,
 }
 
+// String converts LetterHint into its string representation
 func (h LetterHint) String() string {
 	if s, ok := mapLetterHintToString[h]; ok {
 		return s
@@ -47,6 +49,7 @@ func (h LetterHint) String() string {
 	return "unknown"
 }
 
+// MarshallJSON returns JSON byte representation of a LetterHint.
 func (h LetterHint) MarshalJSON() ([]byte, error) {
 	buf := bytes.NewBufferString(`"`)
 	buf.WriteString(mapLetterHintToString[h])
@@ -54,6 +57,7 @@ func (h LetterHint) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// UnmarshallJSON hydrates JSON bytes into a LetterHint.
 func (h *LetterHint) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
@@ -64,6 +68,7 @@ func (h *LetterHint) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// isWinner returns true if this is a winning WordleAttempt.
 func (a WordleAttempt) isWinner() bool {
 	winner := true
 

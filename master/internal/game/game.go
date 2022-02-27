@@ -1,19 +1,15 @@
 /*
 Package game implements the Wordle game functionality.
 
-This package is intended to be exposed through a RESTful API.
-
-The primary interface is Game.
+This package functionality is intended to be exposed through a RESTful API. The
+primary interface is Game.
 
 Key functions:
-	Create(secretWord) - Returns a new game, where secretWord is the five-letter word to be guessed.
-
-	Game.Play(tryWord)	- Attempt a guess by passing in a five-letter word. Returns hints for each letter in the guess.
-	Game.Resign() - End the game before winning or losing.
-	Game.Describe() - Returns a represantation of the game object state (including the secret word).
-
+	Create(secretWord) - Returns a new game, where secretWord is the five-letter 
+	word to be guessed.
+	Retrieve(id string) - Loads and returns the game that matches the provided 
+	game ID.
 */
-
 package game
 
 import (
@@ -28,9 +24,8 @@ import (
 	"github.com/rs/xid"
 )
 
-// Game status enum
+// GameStatusEnum describes the states of a game at any time.
 type GameStatusType int64
-
 const (
 	InPlay GameStatusType = iota
 	Won
@@ -38,16 +33,28 @@ const (
 	Resigned
 )
 
-// Game interface
+// Game interface defines the basic functionality of a Game.
 type Game interface {
+
+	// Describe returns a JSON representation of the game object state (including the secret word).
 	Describe() (string, error)
+
+	// Play attempts a guess by passing in a five-letter word. Returns hints for each letter in the guess.
 	Play(tryWord string) (string, error)
+
+	// Resign ends the game before winning or losing.
 	Resign() (string, error)
-	// State() (string, error)
 }
 
-// Factory used to create a game
+// Create is the factory function that returns a Game instance that is ready
+// to play.
+//
+// You can either pass it the desired secret word as a parameter or pass an 
+// empty string to have it generate a secret word. If the secret word is 
+// invalid (due to length for example) or if the function fails to generate 
+// a word, it will return an error.
 func Create(secretWord string) (Game, error) {
+	// Generate a secret word if none was passed in
 	if len(secretWord) < 1 {
 		var err error
 		if secretWord, err = dictionary.GenerateWord(); err != nil {
@@ -55,10 +62,13 @@ func Create(secretWord string) (Game, error) {
 		}
 	}
 
+	// Validate the secret word
 	sw, err := validateWord(secretWord, secretWord)
 	if err != nil {
 		return nil, err
 	}
+
+	// Configure the game object
 	game := &wordleGame{}
 	game.Id = xid.New().String()
 	game.SecretWord = sw
@@ -66,6 +76,7 @@ func Create(secretWord string) (Game, error) {
 	game.Status = InPlay
 	game.LastUpdated = time.Now()
 
+	// Store the new game state
 	s, err := store.WordleStore()
 	if err != nil {
 		return game, err
@@ -77,7 +88,12 @@ func Create(secretWord string) (Game, error) {
 	return game, nil
 }
 
+// Retrieve a Game from the WordleStore by its ID.
+//
+// Requires a valid game ID as the parameter and will result in an error if it
+// if unable to load the Game.
 func Retrieve(id string) (Game, error) {
+	// Load content by game ID from the WordleStore
 	s, err := store.WordleStore()
 	if err != nil {
 		return nil, err
@@ -87,6 +103,7 @@ func Retrieve(id string) (Game, error) {
 		return nil, err
 	}
 
+	// Cast the content to a Game object and return it
 	game, ok := content.(Game)
 	if !ok {
 		return nil, ErrSerialization
@@ -95,20 +112,30 @@ func Retrieve(id string) (Game, error) {
 	return game, nil
 }
 
+// Describe returns a JSON representation of the game object state (including
+// the secret word).
 func (g *wordleGame) Describe() (string, error) {
 	return g.statusReport(), nil
 }
 
+// Play attempts a guess by passing in a five-letter word and returns hints for
+// each letter in the guess within the JSON game status string.
+// 
+// Returns an error if the guessed word is not five letters in length, or if the
+// game is over or has exceeded the maximum number of guess attempts.
 func (g *wordleGame) Play(tryWord string) (string, error) {
+	// Check the game is in play
 	if g.Status != InPlay {
 		return g.statusReport(), ErrGameOver
 	}
+	// Check that this attempt does not exeecded the maximum turns
 	if len(g.Attempts) >= config.CONFIG_GAME_MAXATTEMPTS ||
 		g.ValidAttempts >= config.CONFIG_GAME_MAXVALIDATTEMPTS {
 		g.Status = Lost
 		return g.statusReport(), ErrOutOfTurns
 	}
 
+	// Create an attempt and validate the tryWord
 	attempt := g.addAttempt()
 	tw, err := validateWord(tryWord, g.SecretWord)
 	attempt.TryWord = tw
@@ -157,7 +184,16 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	return g.statusReport(), nil
 }
 
+// Resign ends the game before winning or losing.
+//
+// Returns the updated game status as JSON after resigning or an error if the
+// resign attempt was unsuccessful (for example, if the game was already lost).
+// An error can also be generated when the game resigns successfully but the 
+// WordleStore fails to update.
 func (g *wordleGame) Resign() (string, error) {
+	// TODO: Verify that the game is InPlay or return error
+
+	// Update the game state
 	g.Status = Resigned
 	g.LastUpdated = time.Now()
 
@@ -174,6 +210,7 @@ func (g *wordleGame) Resign() (string, error) {
 	return g.statusReport(), nil
 }
 
+// MarshallJSON returns JSON byte representation of GameStatusType.
 func (t GameStatusType) MarshalJSON() ([]byte, error) {
 	buf := bytes.NewBufferString(`"`)
 	buf.WriteString(mapGameStatusToString[t])
@@ -181,6 +218,7 @@ func (t GameStatusType) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// UnmarshallJSON hydrates JSON bytes into GameStatusType.
 func (t *GameStatusType) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
@@ -207,6 +245,7 @@ var mapStringToGameStatus = map[string]GameStatusType{
 	"Resigned": Resigned,
 }
 
+// String returns string representation of GameStatusType
 func (t GameStatusType) String() string {
 	if s, ok := mapGameStatusToString[t]; ok {
 		return s
