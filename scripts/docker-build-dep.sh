@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Script that copies dependencies from src to docker-config.
+# Script that copies dependencies from src to docker folder.
 #
 
 # Find project home folder
@@ -9,7 +9,7 @@ f () { [[ -d ".git" ]] && echo "`pwd`" && exit 0; cd .. && f;}
 project_home=$(f)
 
 # Directory locations
-docker_folder="$project_home/docker-config"
+docker_folder="$project_home/build"
 src_folder="$project_home/"
 
 # Docker base images
