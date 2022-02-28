@@ -1,7 +1,7 @@
 /*
-Package api implements the REST API for wordle-server.
+Package api implements the REST API for alurdle-server.
 
-This wordle game server is designed to be played by automated bots. However, it
+This alurdle game server is designed to be played by automated bots. However, it
 could equally be used by a front-end interface for interactive play.
 
 The interface exposes three routes:
@@ -32,8 +32,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"aluance.io/wordleserver/internal/config"
-	"aluance.io/wordleserver/internal/game"
+	"aluance.io/alurdleserver/internal/config"
+	"aluance.io/alurdleserver/internal/game"
 	"github.com/gin-gonic/gin"
 )
 

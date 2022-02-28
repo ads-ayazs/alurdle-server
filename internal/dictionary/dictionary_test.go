@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"aluance.io/wordleserver/internal/config"
+	"aluance.io/alurdleserver/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestGenerateWord(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	wordleDict.reset()
+	alurdleDict.reset()
 	err := Initialize(TEST_DICTIONARY_FILEPATH)
 	require.NoError(err)
 
@@ -32,7 +32,7 @@ func TestIsWordValid(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	wordleDict.reset()
+	alurdleDict.reset()
 	err := Initialize(TEST_DICTIONARY_FILEPATH)
 	require.NoError(err)
 
@@ -54,29 +54,29 @@ func TestInitialize(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	// Test standard initialization
-	wordleDict.reset()
-	assert.False(wordleDict.initalized)
+	alurdleDict.reset()
+	assert.False(alurdleDict.initalized)
 	err := Initialize("")
 	assert.NoError(err)
 
 	// Make sure that the dictionary is not empty
-	assert.True(wordleDict.initalized)
-	assert.NotZero(len(wordleDict.words))
+	assert.True(alurdleDict.initalized)
+	assert.NotZero(len(alurdleDict.words))
 
 	// Use controled initialization
-	wordleDict.reset()
-	assert.False(wordleDict.initalized)
+	alurdleDict.reset()
+	assert.False(alurdleDict.initalized)
 	err = Initialize(TEST_DICTIONARY_FILEPATH)
 	assert.NoError(err)
 
 	// Make sure that the dictionary is not empty
-	assert.True(wordleDict.initalized)
-	assert.NotZero(len(wordleDict.words))
-	assert.Equal(TEST_DICTIONARY_LENGTH, len(wordleDict.words))
-	assert.Equal(TEST_DICTIONARY_LENGTH, len(wordleDict.wordMap))
+	assert.True(alurdleDict.initalized)
+	assert.NotZero(len(alurdleDict.words))
+	assert.Equal(TEST_DICTIONARY_LENGTH, len(alurdleDict.words))
+	assert.Equal(TEST_DICTIONARY_LENGTH, len(alurdleDict.wordMap))
 
 	// Test the length of a random word
-	assert.Equal(config.CONFIG_GAME_WORDLENGTH, len(wordleDict.words[rand.Intn(TEST_DICTIONARY_LENGTH)]))
+	assert.Equal(config.CONFIG_GAME_WORDLENGTH, len(alurdleDict.words[rand.Intn(TEST_DICTIONARY_LENGTH)]))
 
-	// assert.Equal(wordleDict.words[rand.Intn(TEST_DICTIONARY_LENGTH)], "bless")
+	// assert.Equal(alurdleDict.words[rand.Intn(TEST_DICTIONARY_LENGTH)], "bless")
 }

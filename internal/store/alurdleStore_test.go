@@ -8,19 +8,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWordleStore(t *testing.T) {
+func TestAlurdleStore(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		result *wordleStore
+		result *alurdleStore
 		err    error
 	}{
-		{result: &wordleStore{games: map[string]interface{}{}}, err: nil},
+		{result: &alurdleStore{games: map[string]interface{}{}}, err: nil},
 	}
 
 	for _, test := range tests {
-		resetWordleStore()
-		s, err := WordleStore()
+		resetAlurdleStore()
+		s, err := AlurdleStore()
 		assert.IsType(test.err, err, "unexpected error type")
 		if err != nil {
 			assert.EqualError(err, test.err.Error())
@@ -28,7 +28,7 @@ func TestWordleStore(t *testing.T) {
 		}
 
 		if assert.NotNil(s) {
-			v, ok := s.(*wordleStore)
+			v, ok := s.(*alurdleStore)
 			assert.True(ok)
 
 			assert.NotNil(v)
@@ -37,7 +37,7 @@ func TestWordleStore(t *testing.T) {
 	}
 }
 
-// func (s wordleStore) Save(id string, content interface{}) error
+// func (s alurdleStore) Save(id string, content interface{}) error
 func TestSave(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
@@ -52,8 +52,8 @@ func TestSave(t *testing.T) {
 		{id: "", content: "cause an error", err: errors.New("invalid id")},
 	}
 
-	resetWordleStore() // Ensure that we get a new instance
-	store, err := WordleStore()
+	resetAlurdleStore() // Ensure that we get a new instance
+	store, err := AlurdleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
 
@@ -65,7 +65,7 @@ func TestSave(t *testing.T) {
 			continue // This test returned a valid error so move to the next test
 		}
 
-		v, ok := store.(*wordleStore)
+		v, ok := store.(*alurdleStore)
 		assert.True(ok)
 		assert.Equal(len(v.games), count+1)
 		assert.Contains(v.games, test.id, "id is missing from map")
@@ -74,7 +74,7 @@ func TestSave(t *testing.T) {
 
 }
 
-// func (s wordleStore) Load(id string) (interface{}, error)
+// func (s alurdleStore) Load(id string) (interface{}, error)
 func TestLoad(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
@@ -82,7 +82,7 @@ func TestLoad(t *testing.T) {
 	tests := []struct {
 		id      string
 		content string
-		// result  wordleStore
+		// result  alurdleStore
 		err error
 	}{
 		{id: "", content: "cause an error", err: errors.New("invalid id")},
@@ -90,8 +90,8 @@ func TestLoad(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
-	resetWordleStore()
-	store, err := WordleStore()
+	resetAlurdleStore()
+	store, err := AlurdleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
 
@@ -131,8 +131,8 @@ func TestExists(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
-	resetWordleStore()
-	store, err := WordleStore()
+	resetAlurdleStore()
+	store, err := AlurdleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
 
@@ -182,8 +182,8 @@ func TestDelete(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
-	resetWordleStore()
-	store, err := WordleStore()
+	resetAlurdleStore()
+	store, err := AlurdleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
 
@@ -198,7 +198,7 @@ func TestDelete(t *testing.T) {
 
 	// Test deleting items that exist
 	for _, test := range tests {
-		v, ok := store.(*wordleStore)
+		v, ok := store.(*alurdleStore)
 		require.True(ok)
 		storeSize := len(v.games)
 
@@ -215,7 +215,7 @@ func TestDelete(t *testing.T) {
 
 	// Test deleting non-existant items
 	for _, test := range tests {
-		v, ok := store.(*wordleStore)
+		v, ok := store.(*alurdleStore)
 		require.True(ok)
 		storeSize := len(v.games)
 
@@ -246,8 +246,8 @@ func TestPurgeAll(t *testing.T) {
 		{id: "2a4b6c8d0e", content: "This is the second content", err: nil},
 	}
 
-	resetWordleStore()
-	store, err := WordleStore()
+	resetAlurdleStore()
+	store, err := AlurdleStore()
 	require.NoError(err, "error obtaining the instance")
 	require.NotNil(store, "instance is nil")
 
@@ -269,7 +269,7 @@ func TestPurgeAll(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure store is empty
-	v, ok := store.(*wordleStore)
+	v, ok := store.(*alurdleStore)
 	require.True(ok)
 	storeSize := len(v.games)
 	assert.Zero(storeSize)
@@ -281,12 +281,12 @@ func TestPurgeAll(t *testing.T) {
 }
 
 // func createCleanStore() (Store, error) {
-// 	store, err := WordleStore()
+// 	store, err := AlurdleStore()
 // 	if err != nil {
 // 		return store, err
 // 	}
 
-// 	if v, ok := store.(wordleStore); ok {
+// 	if v, ok := store.(alurdleStore); ok {
 // 		for k, _ := range v.games {
 // 			delete(v.games, k)
 // 		}

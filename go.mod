@@ -1,4 +1,4 @@
-module aluance.io/wordleserver
+module aluance.io/alurdleserver
 
 go 1.17
 

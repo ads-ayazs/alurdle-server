@@ -4,10 +4,10 @@ Package store provides thread-safe content persistence.
 The Store interface is intended for safe use by multiple concurrent threads to
 store, retreieve and delete content with unique client-generated IDs.
 
-WordleStore is a thread-safe implementation of Store for wordle game data.
+AlurdleStore is a thread-safe implementation of Store for alurdle game data.
 
 Key functions:
-	WordleStore() - Obtain a Store object to manage content persistence for Wordle
+	AlurdleStore() - Obtain a Store object to manage content persistence for Alurdle
 	game data.
 */
 package store

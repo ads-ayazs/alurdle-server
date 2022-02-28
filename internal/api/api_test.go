@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"aluance.io/wordleserver/internal/config"
+	"aluance.io/alurdleserver/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -15,12 +15,12 @@ func TestCreate(t *testing.T) {
 
 	tests := []struct {
 		secretWord string
-		result     wordleGame
+		result     alurdleGame
 		err        error
 	}{
-		{secretWord: "", result: wordleGame{SecretWord: "", Attempts: []*WordleAttempt{}}, err: nil},
-		{secretWord: "happy", result: wordleGame{SecretWord: "HAPPY", Attempts: []*WordleAttempt{}}, err: nil},
-		{secretWord: "hAPpY", result: wordleGame{SecretWord: "HAPPY", Attempts: []*WordleAttempt{}}, err: nil},
+		{secretWord: "", result: alurdleGame{SecretWord: "", Attempts: []*AlurdleAttempt{}}, err: nil},
+		{secretWord: "happy", result: alurdleGame{SecretWord: "HAPPY", Attempts: []*AlurdleAttempt{}}, err: nil},
+		{secretWord: "hAPpY", result: alurdleGame{SecretWord: "HAPPY", Attempts: []*AlurdleAttempt{}}, err: nil},
 	}
 
 	for _, test := range tests {
@@ -32,7 +32,7 @@ func TestCreate(t *testing.T) {
 		}
 
 		if assert.NotNil(g) {
-			v, ok := g.(*wordleGame)
+			v, ok := g.(*alurdleGame)
 			assert.True(ok)
 
 			if len(test.result.SecretWord) > 0 {
@@ -173,16 +173,16 @@ func TestAddAttempt(t *testing.T) {
 
 	tests := []struct {
 		createWord string
-		result     *WordleAttempt
+		result     *AlurdleAttempt
 	}{
-		{createWord: "proxy", result: &WordleAttempt{TryWord: "", IsValidWord: false, TryResult: []LetterHint{0, 0, 0, 0, 0}}},
+		{createWord: "proxy", result: &AlurdleAttempt{TryWord: "", IsValidWord: false, TryResult: []LetterHint{0, 0, 0, 0, 0}}},
 	}
 	for _, test := range tests {
 		game, err := Create(test.createWord)
 		require.NoError(err, "Create() returned error when creating Game")
 		require.NotNil(game, "unable to create a Game object")
 
-		v, ok := game.(*wordleGame)
+		v, ok := game.(*alurdleGame)
 		require.True(ok)
 		res := v.addAttempt()
 		assert.NotZero(len(v.Attempts))
@@ -210,7 +210,7 @@ func TestRetrieve(t *testing.T) {
 		require.NoError(err, "Create() returned error when creating Game")
 		require.NotNil(game, "unable to create a Game object")
 
-		v, ok := game.(*wordleGame)
+		v, ok := game.(*alurdleGame)
 		require.True(ok)
 		tests[i].id = v.Id
 	}
@@ -227,7 +227,7 @@ func TestRetrieve(t *testing.T) {
 		assert.NoError(err)
 		assert.NotNil(game)
 
-		v, ok := game.(*wordleGame)
+		v, ok := game.(*alurdleGame)
 		require.True(ok)
 		assert.Equal(test.id, v.Id)
 	}
@@ -259,7 +259,7 @@ func TestScoreWord(t *testing.T) {
 		require.NoError(err, "Create() returned error when creating Game")
 		require.NotNil(game, "unable to create a Game object")
 
-		v, ok := game.(*wordleGame)
+		v, ok := game.(*alurdleGame)
 		require.True(ok)
 
 		r := []LetterHint{Blank, Blank, Blank, Blank, Blank}

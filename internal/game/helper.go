@@ -3,8 +3,8 @@ package game
 import (
 	"strings"
 
-	"aluance.io/wordleserver/internal/config"
-	"aluance.io/wordleserver/internal/dictionary"
+	"aluance.io/alurdleserver/internal/config"
+	"aluance.io/alurdleserver/internal/dictionary"
 )
 
 // validateWord determines if a word is valid for a game and returns the

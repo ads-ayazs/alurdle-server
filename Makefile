@@ -9,7 +9,7 @@ image_options ?=
 
 # local vars
 out_fld ?= _out
-outfile ?= ${out_fld}/wordleserver
+outfile ?= ${out_fld}/alurdleserver
 
 clean: containers-clean local-clean
 .PHONY:clean
@@ -43,7 +43,7 @@ containers-clean: containers-dep-clean
 .PHONY:containers-clean
 
 containers-run: containers-image
-	docker run --rm --name wordle -p 8080:8080 master-build:${image_ver}
+	docker run --rm --name alurdle -p 8080:8080 master-build:${image_ver}
 .PHONY:containers-run
 
 ############
@@ -63,11 +63,11 @@ local-vet: local-fmt
 .PHONY:local-vet
 
 local-build: local-vet
-	@go build -o ${outfile} ./cmd/wordleserver
+	@go build -o ${outfile} ./cmd/alurdleserver
 .PHONY:local-build
 
 local-clean:
-	rm -rf "${out_fld}"
+	@-rm -rf "${out_fld}"
 	@-go clean -cache -i -r
 .PHONY:local-clean
 
@@ -76,5 +76,5 @@ local-dep: local-clean
 .PHONY:local-dep
 
 local-deploy: local-build
-	@go build -o ${outfile} ./cmd/wordleserver
+	@go build -o ${outfile} ./cmd/alurdleserver
 .PHONY:local-deploy

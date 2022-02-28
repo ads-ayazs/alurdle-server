@@ -1,5 +1,5 @@
 /*
-Package game implements the Wordle game functionality.
+Package game implements the Alurdle game functionality.
 
 This package functionality is intended to be exposed through a RESTful API. The
 primary interface is Game.
@@ -18,9 +18,9 @@ import (
 	"strings"
 	"time"
 
-	"aluance.io/wordleserver/internal/config"
-	"aluance.io/wordleserver/internal/dictionary"
-	"aluance.io/wordleserver/internal/store"
+	"aluance.io/alurdleserver/internal/config"
+	"aluance.io/alurdleserver/internal/dictionary"
+	"aluance.io/alurdleserver/internal/store"
 	"github.com/rs/xid"
 )
 
@@ -70,15 +70,15 @@ func Create(secretWord string) (Game, error) {
 	}
 
 	// Configure the game object
-	game := &wordleGame{}
+	game := &alurdleGame{}
 	game.Id = xid.New().String()
 	game.SecretWord = sw
-	game.Attempts = []*WordleAttempt{}
+	game.Attempts = []*AlurdleAttempt{}
 	game.Status = InPlay
 	game.LastUpdated = time.Now()
 
 	// Store the new game state
-	s, err := store.WordleStore()
+	s, err := store.AlurdleStore()
 	if err != nil {
 		return game, err
 	}
@@ -89,13 +89,13 @@ func Create(secretWord string) (Game, error) {
 	return game, nil
 }
 
-// Retrieve a Game from the WordleStore by its ID.
+// Retrieve a Game from the AlurdleStore by its ID.
 //
 // Requires a valid game ID as the parameter and will result in an error if it
 // if unable to load the Game.
 func Retrieve(id string) (Game, error) {
-	// Load content by game ID from the WordleStore
-	s, err := store.WordleStore()
+	// Load content by game ID from the AlurdleStore
+	s, err := store.AlurdleStore()
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func Retrieve(id string) (Game, error) {
 
 // Describe returns a JSON representation of the game object state (including
 // the secret word).
-func (g *wordleGame) Describe() (string, error) {
+func (g *alurdleGame) Describe() (string, error) {
 	return g.statusReport(), nil
 }
 
@@ -124,7 +124,7 @@ func (g *wordleGame) Describe() (string, error) {
 //
 // Returns an error if the guessed word is not five letters in length, or if the
 // game is over or has exceeded the maximum number of guess attempts.
-func (g *wordleGame) Play(tryWord string) (string, error) {
+func (g *alurdleGame) Play(tryWord string) (string, error) {
 	// Check the game is in play
 	if g.Status != InPlay {
 		return g.statusReport(), ErrGameOver
@@ -172,7 +172,7 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 	g.LastUpdated = time.Now()
 
 	// Save to game store
-	gs, err := store.WordleStore()
+	gs, err := store.AlurdleStore()
 	if err != nil {
 		return g.statusReport(), err
 	}
@@ -190,8 +190,8 @@ func (g *wordleGame) Play(tryWord string) (string, error) {
 // Returns the updated game status as JSON after resigning or an error if the
 // resign attempt was unsuccessful (for example, if the game was already lost).
 // An error can also be generated when the game resigns successfully but the
-// WordleStore fails to update.
-func (g *wordleGame) Resign() (string, error) {
+// AlurdleStore fails to update.
+func (g *alurdleGame) Resign() (string, error) {
 	// TODO: Verify that the game is InPlay or return error
 
 	// Update the game state
@@ -199,7 +199,7 @@ func (g *wordleGame) Resign() (string, error) {
 	g.LastUpdated = time.Now()
 
 	// Save to game store
-	gs, err := store.WordleStore()
+	gs, err := store.AlurdleStore()
 	if err != nil {
 		return g.statusReport(), err
 	}
@@ -254,17 +254,17 @@ func (t GameStatusType) String() string {
 	return "unknown"
 }
 
-type wordleGame struct {
-	Id            string           `json:"id"`
-	Status        GameStatusType   `json:"gameStatus"`
-	SecretWord    string           `json:"secretWord"`
-	Attempts      []*WordleAttempt `json:"attempts"`
-	ValidAttempts int              `json:"validAttempts"`
-	LastUpdated   time.Time        `json:"lastUpdated"`
+type alurdleGame struct {
+	Id            string            `json:"id"`
+	Status        GameStatusType    `json:"gameStatus"`
+	SecretWord    string            `json:"secretWord"`
+	Attempts      []*AlurdleAttempt `json:"attempts"`
+	ValidAttempts int               `json:"validAttempts"`
+	LastUpdated   time.Time         `json:"lastUpdated"`
 }
 
-func (g *wordleGame) addAttempt() *WordleAttempt {
-	wa := new(WordleAttempt)
+func (g *alurdleGame) addAttempt() *AlurdleAttempt {
+	wa := new(AlurdleAttempt)
 
 	wa.TimeStamp = time.Now()
 	wa.TryWord = ""
@@ -277,7 +277,7 @@ func (g *wordleGame) addAttempt() *WordleAttempt {
 	return wa
 }
 
-func (g wordleGame) statusReport() string {
+func (g alurdleGame) statusReport() string {
 	b, err := json.Marshal(g)
 	if err != nil {
 		return "{}"
@@ -305,7 +305,7 @@ func (g wordleGame) statusReport() string {
 	return string(b)
 }
 
-func (g wordleGame) scoreWord(tryWord string, result *[]LetterHint) error {
+func (g alurdleGame) scoreWord(tryWord string, result *[]LetterHint) error {
 	if result == nil {
 		return ErrNilResult
 	}

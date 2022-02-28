@@ -1,6 +1,6 @@
 package main
 
-import "aluance.io/wordleserver/internal/api"
+import "aluance.io/alurdleserver/internal/api"
 
 func main() {
 	api.Initialize()

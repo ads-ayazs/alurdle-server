@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"aluance.io/wordleserver/internal/config"
+	"aluance.io/alurdleserver/internal/config"
 	"github.com/matryer/resync"
 )
 
@@ -30,14 +30,14 @@ func GenerateWord() (string, error) {
 	}
 
 	// Obtain a read lock
-	wordleDict.mu.RLock()
-	defer wordleDict.mu.RUnlock()
+	alurdleDict.mu.RLock()
+	defer alurdleDict.mu.RUnlock()
 
 	// Return a random word or "blank" by default.
 	word := "blank"
-	if max := wordleDict.size(); max > 0 {
+	if max := alurdleDict.size(); max > 0 {
 		index := rand.Intn(max)
-		word = wordleDict.words[index]
+		word = alurdleDict.words[index]
 	}
 
 	return word, nil
@@ -51,11 +51,11 @@ func IsWordValid(w string) bool {
 	}
 
 	// Ontain a read lock
-	wordleDict.mu.RLock()
-	defer wordleDict.mu.RUnlock()
+	alurdleDict.mu.RLock()
+	defer alurdleDict.mu.RUnlock()
 
 	// Check if the word is in the dictionary
-	if member, ok := wordleDict.wordMap[strings.ToLower(w)]; ok {
+	if member, ok := alurdleDict.wordMap[strings.ToLower(w)]; ok {
 		return member
 	}
 
@@ -69,11 +69,11 @@ func IsWordValid(w string) bool {
 // it is unable to load from the file.
 func Initialize(filename string) error {
 	// Ontain a write lock
-	wordleDict.mu.Lock()
-	defer wordleDict.mu.Unlock()
+	alurdleDict.mu.Lock()
+	defer alurdleDict.mu.Unlock()
 
 	// Only initialize dictionary once
-	if wordleDict.initalized {
+	if alurdleDict.initalized {
 		return nil
 	}
 
@@ -89,7 +89,7 @@ func Initialize(filename string) error {
 	defer f.Close()
 
 	// Do this only once (unless reset)
-	wordleDict.init_once.Do(func() {
+	alurdleDict.init_once.Do(func() {
 		rand.Seed(time.Now().UnixNano())
 
 		// Load only words of configured length from the file
@@ -97,8 +97,8 @@ func Initialize(filename string) error {
 		for scanner.Scan() {
 			word := scanner.Text()
 			if len(word) == config.CONFIG_GAME_WORDLENGTH {
-				wordleDict.words = append(wordleDict.words, word)
-				wordleDict.wordMap[word] = true
+				alurdleDict.words = append(alurdleDict.words, word)
+				alurdleDict.wordMap[word] = true
 			}
 		}
 
@@ -106,7 +106,7 @@ func Initialize(filename string) error {
 			return
 		}
 
-		wordleDict.initalized = true
+		alurdleDict.initalized = true
 	})
 
 	return nil
@@ -137,5 +137,5 @@ func (d *dict) reset() {
 	d.initalized = false
 }
 
-// wordleDict is the singleton dict variable.
-var wordleDict = &dict{initalized: false, words: []string{}, wordMap: make(map[string]bool)}
+// alurdleDict is the singleton dict variable.
+var alurdleDict = &dict{initalized: false, words: []string{}, wordMap: make(map[string]bool)}

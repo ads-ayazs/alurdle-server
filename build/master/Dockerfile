@@ -23,7 +23,7 @@ RUN make local-dep
 COPY "${APP_FLD}" .
 
 # Build the binary with static linking
-RUN CGO_ENABLED=0 make outfile=/wordleserver local-deploy
+RUN CGO_ENABLED=0 make outfile=/alurdleserver local-deploy
 
 
 
@@ -37,10 +37,10 @@ RUN adduser -D -H ${USERNAME}
 
 # Copy output binary from build image
 WORKDIR /
-COPY --from=build /wordleserver /
+COPY --from=build /alurdleserver /
 
 # Expose port and run as non-privileged user
 EXPOSE 8080
 
 USER ${USERNAME}:${USERNAME}
-ENTRYPOINT [ "/wordleserver" ]
+ENTRYPOINT [ "/alurdleserver" ]

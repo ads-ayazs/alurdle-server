@@ -17,8 +17,8 @@ const (
 	Red                      // invalid word
 )
 
-// WordleAttempt holds the state of an attempt (guess) and its result.
-type WordleAttempt struct {
+// AlurdleAttempt holds the state of an attempt (guess) and its result.
+type AlurdleAttempt struct {
 	TryWord     string       `json:"tryWord"`
 	IsValidWord bool         `json:"isValidWord"`
 	TryResult   []LetterHint `json:"tryResult"`
@@ -68,8 +68,8 @@ func (h *LetterHint) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// isWinner returns true if this is a winning WordleAttempt.
-func (a WordleAttempt) isWinner() bool {
+// isWinner returns true if this is a winning AlurdleAttempt.
+func (a AlurdleAttempt) isWinner() bool {
 	winner := true
 
 	for _, r := range a.TryResult {

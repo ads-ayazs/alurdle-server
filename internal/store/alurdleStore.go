@@ -6,10 +6,10 @@ import (
 	"github.com/matryer/resync"
 )
 
-// WordleStore returns an object used to persist Wordle game data that implements
+// AlurdleStore returns an object used to persist Alurdle game data that implements
 // the Store interface.
-func WordleStore() (Store, error) {
-	ws := getWordleStore()
+func AlurdleStore() (Store, error) {
+	ws := getAlurdleStore()
 	return ws, nil
 }
 
@@ -18,7 +18,7 @@ func WordleStore() (Store, error) {
 // Note that if the ID is already in use, it will intentionally overwrite any
 // existing content with this new object. An error is returned if the ID string
 // is empty or invalid.
-func (s *wordleStore) Save(id string, content interface{}) error {
+func (s *alurdleStore) Save(id string, content interface{}) error {
 	// Check that the ID is valid
 	if err := validateId(id); err != nil {
 		return err
@@ -37,7 +37,7 @@ func (s *wordleStore) Save(id string, content interface{}) error {
 //
 // If no content exists for the ID, then it returns nil (no error). An error is
 // returned if the ID string is empty or invalid.
-func (s *wordleStore) Load(id string) (interface{}, error) {
+func (s *alurdleStore) Load(id string) (interface{}, error) {
 	// Validate the ID
 	if err := validateId(id); err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (s *wordleStore) Load(id string) (interface{}, error) {
 // Exists returns true if the given ID is associated with content in the store.
 //
 // An error is returned if the ID string is empty or invalid.
-func (s *wordleStore) Exists(id string) (bool, error) {
+func (s *alurdleStore) Exists(id string) (bool, error) {
 	// Check that the ID string is valid
 	if err := validateId(id); err != nil {
 		return false, err
@@ -76,7 +76,7 @@ func (s *wordleStore) Exists(id string) (bool, error) {
 // Delete the object in the store for the given ID string.
 //
 // An error is returned if the ID string is empty or invalid.
-func (s *wordleStore) Delete(id string) error {
+func (s *alurdleStore) Delete(id string) error {
 	// Validate the ID string
 	if err := validateId(id); err != nil {
 		return err
@@ -97,7 +97,7 @@ func (s *wordleStore) Delete(id string) error {
 }
 
 // PurgeAll deletes all objects from the store.
-func (s *wordleStore) PurgeAll() error {
+func (s *alurdleStore) PurgeAll() error {
 	// Obtain a write lock
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -112,22 +112,22 @@ func (s *wordleStore) PurgeAll() error {
 
 /////////////////
 
-// wordleStore struct wraps the mutex and map used for in-memory persistence.
-type wordleStore struct {
+// alurdleStore struct wraps the mutex and map used for in-memory persistence.
+type alurdleStore struct {
 	mu    sync.RWMutex
 	games map[string]interface{}
 }
 
 // singleStore points at a singleton instance
-var singleStore *wordleStore
+var singleStore *alurdleStore
 var once resync.Once // using resync.Once to facilitate testing
 
-// getWordleStore is the singleton constructor for the wordleStore.
-func getWordleStore() *wordleStore {
+// getAlurdleStore is the singleton constructor for the alurdleStore.
+func getAlurdleStore() *alurdleStore {
 	if singleStore == nil {
 		once.Do(
 			func() {
-				singleStore = new(wordleStore) //&wordleStore{}
+				singleStore = new(alurdleStore) //&alurdleStore{}
 
 				singleStore.mu.Lock()
 				defer singleStore.mu.Unlock()
@@ -139,8 +139,8 @@ func getWordleStore() *wordleStore {
 	return singleStore
 }
 
-// resetWordleStore facilitates testing.
-func resetWordleStore() {
+// resetAlurdleStore facilitates testing.
+func resetAlurdleStore() {
 	singleStore = nil
 	once.Reset()
 }
