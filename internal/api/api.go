@@ -2,14 +2,14 @@
 Package api implements the REST API for wordle-server.
 
 This wordle game server is designed to be played by automated bots. However, it
-could equally be used by a front-end interface for interactive play. 
+could equally be used by a front-end interface for interactive play.
 
 The interface exposes three routes:
 
 GET /game?id=game_id&word=start_word
 	- Creates a new game when called without the "id" param.
 	- Optional param "word" can be used to specify the start word for a new game.
-	- Optional param "id" can be passed to obtain a JSON game description for 
+	- Optional param "id" can be passed to obtain a JSON game description for
 		the given ID.
 
 GET /play?id=GAME_ID&guess=GUESS_WORD

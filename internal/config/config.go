@@ -35,7 +35,6 @@ const CONFIG_GAME_MAXATTEMPTS = 12
 // Game maximum valid attempts.
 const CONFIG_GAME_MAXVALIDATTEMPTS = 6
 
-
 // RootDir returns the runtime root folder.
 func RootDir() string {
 	_, b, _, _ := runtime.Caller(0)

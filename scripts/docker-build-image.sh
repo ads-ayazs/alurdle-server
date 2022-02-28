@@ -16,7 +16,7 @@ shift 1
 OPT_REMAINDER=$@
 
 # Directory locations
-docker_folder="$project_home/docker-config"
+docker_folder="$project_home/build"
 
 # Build runtime images
 image_names=(master)
