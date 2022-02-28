@@ -19,7 +19,7 @@ OPT_REMAINDER=$@
 docker_folder="$project_home/build"
 
 # Build runtime images
-image_names=(master)
+image_names=(alurdleserver)
 
 for f in "${image_names[@]}"
 do

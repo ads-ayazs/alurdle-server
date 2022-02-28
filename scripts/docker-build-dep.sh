@@ -18,7 +18,7 @@ src_folder="$project_home"
 opt_clean_only=${1:-false}
 
 # master
-base_folder="master"
+base_folder="alurdleserver"
 app_folder="app"
 
 from_dir="$src_folder"

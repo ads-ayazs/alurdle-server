@@ -26,7 +26,7 @@ source ${project_home}/.env
 set +o allexport
 
 # ROOT NAMES OF IMAGES TO BE PUSHED
-image_names=(master)
+image_names=(alurdleserver)
 
 # SET THESE TO MATCH THE AWS REGISTRY ACCOUNT AND REGION
 aws_region=${AWS_REGION} #ca-central-1
